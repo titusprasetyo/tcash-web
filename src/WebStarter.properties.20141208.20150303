@@ -1,0 +1,16 @@
+# Database Configuration
+# jndi.datasource=java:comp/env/jdbc/tsel_tunai_dev
+jndi.datasource=java:comp/env/jdbc/tsel_tunai
+db_host=10.2.114.121
+db_username=tunai
+db_password=p#nDHYk421
+db_name=OPTUNAI
+
+allowed.prefix=62
+merchant.filter=(merchant_id='0804041548579057')
+merchant.info.filter=(LOWER(name) = 'bni')
+merchant.tsel.acc=993884386884
+
+settlement.cycle=00|08|16
+settlement.approver.title=Head of Tresury Division|Pjs. Head of Cash Collection Control Department
+settlement.approver.name=Ida Ayu Satiawati|Hanna Sitepu

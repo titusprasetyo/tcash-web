@@ -1,0 +1,328 @@
+<%-- 
+    Document   : deposit_suggest_od
+    Created on : Apr 5, 2010, 12:04:39 PM
+    Author     : madeady
+--%>
+
+<%@page import="java.io.*, java.util.*, java.text.*, java.sql.*"%>
+<%@ include file="/web-starter/taglibs.jsp"%>
+<%@page import="com.telkomsel.itvas.webstarter.User"%>
+
+<%
+//JAVABEAN UNTUK SMS
+//<jsp:useBean id="reg" scope="request" class="tsel_tunai.Register2Bean"/>
+//keperluan melakukan update tsel_merchant_account, tsel_merchant_account_history, merchant_deposit
+//String userName = "admin";
+
+//keperluan untuk melakukan pencocokan
+String []   suggestedMercId = request.getParameterValues("suggestedMercId"),
+            fileID1 = request.getParameterValues("file_id1"),
+            fileID2 = request.getParameterValues("file_id2"),
+            fileID3 = request.getParameterValues("file_id3");
+
+//keperluan untuk akses basisdatanya
+Connection con = null;
+Statement stmt = null;
+PreparedStatement pstmt = null;
+ResultSet rs = null;
+
+%>
+
+<stripes:layout-render name="/web-starter/layout/standard.jsp" title="Suggest Merchant Deposit">
+	<stripes:layout-component name="contents">
+
+
+        <script language="JavaScript">
+        <!--
+        function checkExecute(){
+            with(document) return confirm("Do you really want to suggest these deposit?");
+        }        
+        
+        function isNotDouble(){
+            
+        }
+        //-->
+</script>
+
+
+        <%
+        //out.println("<h1>Admin</h1> ");
+        try{
+            //Buka dulu si databasenya
+            Class.forName("oracle.jdbc.OracleDriver");
+            con = DriverManager.getConnection("jdbc:oracle:thin:@10.2.114.121:1521:OPTUNAI", "tunai", "tunai123");
+
+
+        %>
+       
+        <%
+            //PROSES UPDATE FILE DAN RECORD YANG MANUALLY MATCHED
+            if(suggestedMercId!=null&&fileID1!=null&&fileID2!=null&&fileID3!=null){
+                //cek kalau misalkan ada suggestedMercId yang sama / dobel
+                Boolean doubleStatus = true;
+                if (suggestedMercId.length > 1){
+                    //out.println("<script language='javascript'>alert('Masuk KESINI')</script>");
+                    for(int i=0;i<(suggestedMercId.length)-1;i++){
+                        for(int j=i+1;j<suggestedMercId.length;j++){
+                            //out.println("<script language='javascript'>alert('MASUK KESINI')</script>");
+                            if(suggestedMercId[i].equalsIgnoreCase(suggestedMercId[j]) && !suggestedMercId[i].equalsIgnoreCase("") ){                                
+                                doubleStatus = false;
+                                break;
+                            }
+                        }
+                        if(!doubleStatus)break;
+                    }
+                }else if (suggestedMercId.length == 1){
+                    doubleStatus = true;
+                }else if (suggestedMercId.length == 0){
+                    doubleStatus = false;
+                }
+                //kalau misalkan tidak ada yang double
+                if(doubleStatus){
+                    try{
+                        for(int i=0;i<suggestedMercId.length;i++){
+                            if(suggestedMercId[i]!=""){
+                                pstmt = con.prepareStatement("UPDATE ACC_STATEMENT SET REF='"+suggestedMercId[i]+"' WHERE TX_DATE=TO_DATE('"+fileID1[i].substring(0,10)+"', 'YYYY-MM-DD') AND TIPE='C' AND DESCRIPTION='"+fileID2[i]+"' AND AMOUNT="+fileID3[i]);
+                                pstmt.executeQuery();
+                                pstmt.close();
+                            }
+                        }
+                        out.println("<script language='javascript'>alert('Suggest approval successful')</script>");
+                    }
+                    catch(SQLException e){
+                        e.printStackTrace();
+                        out.println("<script language='javascript'>alert('Suggest approval unsuccessful')</script>");
+                    }
+                }
+                else{
+                    out.println("<script language='javascript'>alert('Suggest approval unsuccessful, check your suggestion, make sure there is no duplicate.')</script>");
+                }
+                //KIRIM SMS KE FINANCE (RANI)
+                //reg.sendSms('62812222222', 'Admin sudah melakukan sugesti, finance aman untuk melakukan approve.', "2828");
+            }
+        %>
+            
+        <%
+            //PENCOCOKAN ANTARA REQUEST DEPOSIT DAN ACCOUNT STATEMENT DIMULAI
+            
+            //untuk keperluan pencocokan
+            int jmlFileInt = 0, jmlRecordInt = 0;
+            
+            pstmt = con.prepareStatement("SELECT COUNT(*) AS jmlFile FROM ACC_STATEMENT WHERE STATUS='0' AND TIPE='C' AND REF IS NULL");
+            rs = pstmt.executeQuery();            
+            while(rs.next()){
+                jmlFileInt = rs.getInt("jmlFile");
+            }            
+            pstmt.close();rs.close();
+            
+            pstmt = con.prepareStatement("SELECT COUNT(*) AS jmlRecord FROM MERCHANT_DEPOSIT WHERE IS_EXECUTED='0' AND entry_login != 'Daily Settlement' AND NOT DEPOSIT_ID IN (SELECT REF FROM ACC_STATEMENT WHERE NOT REF IS NULL)");
+            rs = pstmt.executeQuery();            
+            while(rs.next()){
+                jmlRecordInt = rs.getInt("jmlRecord");
+            }            
+            pstmt.close();rs.close();
+            
+            //cek kalau ada request deposit atau account statement yang akan dibandingkan                  
+            if (jmlFileInt!=0 && jmlRecordInt!=0){
+                //load dari tabel ke array HasilFile
+                //String [] tabelFile; //= db.loadSQLasArray("SELECT TX_DATE, DESCRIPTION, AMOUNT FROM ACC_STATEMENT WHERE STATUS='0' AND REF IS NULL");
+                ArrayList<String> tabelFile = new ArrayList<String>();
+                pstmt = con.prepareStatement("SELECT TX_DATE, DESCRIPTION, AMOUNT FROM ACC_STATEMENT WHERE STATUS='0' AND TIPE='C' AND REF IS NULL");
+                rs = pstmt.executeQuery();            
+                while(rs.next()){
+                    tabelFile.add(rs.getString(1)+","+rs.getString(2)+","+rs.getString(3));
+                }            
+                pstmt.close();rs.close();
+                
+                String matriksFile[][] = new String[jmlFileInt][3];
+                
+                //load matriksFilenya
+                for (int i=0;i<jmlFileInt;i++){
+                    matriksFile[i] = tabelFile.get(i).split(",");
+                }
+
+                ArrayList<String> tabelDeposit = new ArrayList<String>();
+                pstmt = con.prepareStatement("SELECT DEPOSIT_TIME, MERCHANT_ID, AMOUNT, DEPOSIT_ID FROM MERCHANT_DEPOSIT WHERE IS_EXECUTED='0' AND entry_login != 'Daily Settlement' AND NOT DEPOSIT_ID IN (SELECT REF FROM ACC_STATEMENT WHERE NOT REF IS NULL)");
+                rs = pstmt.executeQuery();            
+                while(rs.next()){
+                    tabelDeposit.add(rs.getString(1)+","+rs.getString(2)+","+rs.getString(3)+","+rs.getString(4));
+                }            
+                pstmt.close();rs.close();
+                //load tabel merchant deposit ke array
+                String matriksDeposit[][] = new String[jmlRecordInt][4];
+                //load matriksDepositnya
+                for (int i=0;i<jmlRecordInt;i++){
+                    matriksDeposit[i] = tabelDeposit.get(i).split(",");
+                }
+                
+                //load array pencocokan
+                int [] matchedOnes = new int [jmlRecordInt];
+                for (int i=0;i<jmlRecordInt;i++){
+                    matchedOnes[i] = 0;
+                }
+                //sesudah me-load kedua matriks, saatnya mencocokan dan menaruhnya ke 4 array
+                int [] idMatch = new int[50], idUnMatch = new int[50], fileIdMatch = new int[50], fileIdUnMatch = new int[50];
+                int idMatchInt = 0, idUnMatchInt = 0, fileIdMatchInt = 0, fileIdUnMatchInt = 0;
+
+                //proses mencocokan
+                for(int i=0;i<jmlFileInt;i++){
+                    for(int j=0;j<jmlRecordInt;j++){
+                        if(((matriksFile[i][0].substring(0, 10)).equalsIgnoreCase(matriksDeposit[j][0].substring(0, 10)))&&(matriksFile[i][2].equalsIgnoreCase(matriksDeposit[j][2]))&&(matriksFile[i][1].contains(matriksDeposit[j][1]))&&matchedOnes[j]==0){
+                            //mulai pencocokan, kalau cocok masukin ke array hasil idMatch dan fileIdMatch
+                            idMatch[idMatchInt] = j;
+                            fileIdMatch[fileIdMatchInt] = i;
+                            idMatchInt++;
+                            fileIdMatchInt++;                            
+                            matchedOnes[j] = 1;
+                            break;
+                        }
+                    }
+                }
+
+                //kita bedakan menjadi dua, yang satu kalau sudah pernah ada yang cocok sebelumnya, yang satu lagi kalau ga ada yang cocok, berarti yang diambil belum cocok semua.
+
+                if(idMatchInt!=0){
+                    //DIBAWAH INI UNTUK YANG TIDAK MEMPUNYAI PASANGAN
+                    Boolean status;
+                    //inisialisasi request atau file yang tidak mempunyai pasangan
+
+                    //tabel record
+                    for(int i=0;i<jmlRecordInt;i++){
+                        status = true;
+                        for(int j=0;j<idMatchInt;j++){
+                            if(i!=idMatch[j]){
+                                status&=false;
+                            }
+                            else{
+                                status=true;
+                                break;
+                            }
+                        }
+                        if (status==false) {
+                            idUnMatch[idUnMatchInt]=i;
+                            idUnMatchInt++;
+                        }
+                    }
+
+                    //tabel file
+                    for(int i=0;i<jmlFileInt;i++){
+                        status = true;
+                        for(int j=0;j<fileIdMatchInt;j++){
+                            if(i!=fileIdMatch[j]){
+                                status&=false;
+                            }
+                            else{
+                                status=true;
+                                break;
+                            }
+                        }
+                        if (status==false) {
+                            fileIdUnMatch[fileIdUnMatchInt]=i;
+                            fileIdUnMatchInt++;
+                        }
+                    }                    
+                }
+                else{
+                    for(int i=0;i<jmlRecordInt;i++){
+                        idUnMatch[idUnMatchInt] = i;
+                        idUnMatchInt++;
+                    }
+                    for(int i=0;i<jmlFileInt;i++){
+                        fileIdUnMatch[fileIdUnMatchInt] = i;
+                        fileIdUnMatchInt++;
+                    }                    
+                }
+                                
+                //KELUARKAN HASIL YANG TIDAK COCOK
+                if(idUnMatchInt!=0){
+                    out.println("<br /> Untuk request deposit yang belum punya pasangan adalah : ");
+                    //out.println("<table border='1'  width='45%'>");
+out.println("<table width='45%' border='1' cellspacing='0' cellpadding='0' bordercolor='#FFF6EF'>"); 
+out.println("<tr><td colspan='5'><div align='right'><font color='#CC6633' size='2' face='Verdana, Arial, Helvetica, sans-serif'><strong>.:: Deposit List</strong></font></div></td></tr>");
+                    //out.println("<tr><td>Baris Record</td><td>Deposit Date</td><td>Merchant ID</td><td>Deposit Amount</td><td>Deposit ID</td></tr>");
+
+out.println("<tr><td bgcolor='#CC6633'><div align='center'><font color='#FFFFFF' size='1' face='Verdana, Arial, Helvetica, sans-serif'><strong>Baris Record</strong></font></div></td>");
+out.println("<td bgcolor='#CC6633'><div align='center'><font color='#FFFFFF' size='1' face='Verdana, Arial, Helvetica, sans-serif'><strong>Deposit Date</strong></font></div></td>");
+out.println("<td bgcolor='#CC6633'><div align='center'><font color='#FFFFFF' size='1' face='Verdana, Arial, Helvetica, sans-serif'><strong>Merchant ID</strong></font></div></td>");
+out.println("<td bgcolor='#CC6633'><div align='center'><font color='#FFFFFF' size='1' face='Verdana, Arial, Helvetica, sans-serif'><strong>Deposit Amount</strong></font></div></td>");
+out.println("<td bgcolor='#CC6633'><div align='center'><font color='#FFFFFF' size='1' face='Verdana, Arial, Helvetica, sans-serif'><strong>Deposit ID</strong></font></div></td></tr>");
+
+                    for(int i=0;i<idUnMatchInt;i++){
+                        /*out.println("<tr>");
+                        out.println("<td>"+idUnMatch[i]+"</td><td>"+matriksDeposit[idUnMatch[i]][0]+"</td><td>"+matriksDeposit[idUnMatch[i]][1]+"</td><td>"+matriksDeposit[idUnMatch[i]][2]+"</td><td>"+matriksDeposit[idUnMatch[i]][3]+"</td>");
+                        out.println("</tr>");*/
+
+	out.println("<tr><td><div align='center'><font size='1' face='Verdana, Arial, Helvetica, sans-serif'>"+ idUnMatch[i] +"</font></div></td>");
+	out.println("<td><div align='center'><font size='1' face='Verdana, Arial, Helvetica, sans-serif'>"+ matriksDeposit[idUnMatch[i]][0] +"</font></div></td>");
+	out.println("<td><div align='center'><font size='1' face='Verdana, Arial, Helvetica, sans-serif'>"+ matriksDeposit[idUnMatch[i]][1] +"</font></div></td>");
+	out.println("<td><div align='center'><font size='1' face='Verdana, Arial, Helvetica, sans-serif'>"+ matriksDeposit[idUnMatch[i]][2] +"</font></div></td>");
+	out.println("<td><div align='center'><font size='1' face='Verdana, Arial, Helvetica, sans-serif'>"+ matriksDeposit[idUnMatch[i]][3] +"</font></div></td></tr>");
+
+                    }
+                    out.println("</table>");
+                }
+                else{
+                    out.println("<br />Semua request deposit sudah memiliki pasangan.");
+                }
+                
+                if(fileIdUnMatchInt!=0){
+                    out.println("<br /><hr />Untuk account statement yang belum punya pasangan adalah : ");
+                    out.println("<form action='deposit_suggest_od.jsp' method='get'>");
+                    //out.println("<table border='1'  width='45%'>");
+out.println("<table width='45%' border='1' cellspacing='0' cellpadding='0' bordercolor='#FFF6EF'>");
+out.println("<tr><td colspan='5'><div align='right'><font color='#CC6633' size='2' face='Verdana, Arial, Helvetica, sans-serif'><strong>.:: Account Statement</strong></font></div></td></tr>"); 
+                    //out.println("<tr><td>Baris File</td><td>Transaction Date</td><td>Description</td><td>Amounts</td><td>Merchant ID</td></tr>");
+                    for(int i=0;i<fileIdUnMatchInt;i++){
+                        //out.println("<tr>");
+                        //out.println("<td>"+fileIdUnMatch[i]+"</td><td>"+matriksFile[fileIdUnMatch[i]][0]+"</td><td>"+matriksFile[fileIdUnMatch[i]][1]+"</td><td>"+matriksFile[fileIdUnMatch[i]][2]+"</td>");
+                        //out.println("<td><select name='suggestedMercId'>");
+                        //out.println("<option value=''>&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp</option>");
+                        
+	out.println("<tr><td><div align='center'><font size='1' face='Verdana, Arial, Helvetica, sans-serif'>"+ fileIdUnMatch[i] +"</font></div></td>");
+	out.println("<td><div align='center'><font size='1' face='Verdana, Arial, Helvetica, sans-serif'>"+ matriksFile[fileIdUnMatch[i]][0] +"</font></div></td>");
+	out.println("<td><div align='center'><font size='1' face='Verdana, Arial, Helvetica, sans-serif'>"+ matriksFile[fileIdUnMatch[i]][1] +"</font></div></td>");
+	out.println("<td><div align='center'><font size='1' face='Verdana, Arial, Helvetica, sans-serif'>"+ matriksFile[fileIdUnMatch[i]][2] +"</font></div></td>");
+	out.println("<td><div align='center'><font size='1' face='Verdana, Arial, Helvetica, sans-serif'><select name='suggestedMercId'>");
+	out.println("<option value=''>&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp</option>");
+
+			   for(int j=0;j<idUnMatchInt;j++) {
+                            if((matriksFile[fileIdUnMatch[i]][2]).equalsIgnoreCase(matriksDeposit[idUnMatch[j]][2]))
+                            out.println("<option value='"+matriksDeposit[idUnMatch[j]][3]+"'>"+matriksDeposit[idUnMatch[j]][1]+"</option>");
+
+                        }
+                        out.println("</select><input type='hidden' name='file_id1' value='"+matriksFile[fileIdUnMatch[i]][0]+"'><input type='hidden' name='file_id2' value='"+matriksFile[fileIdUnMatch[i]][1]+"'><input type='hidden' name='file_id3' value='"+matriksFile[fileIdUnMatch[i]][2]+"'>");
+                        //out.println("</td></tr>");
+	out.println("</font></div></td></tr>");
+                    }
+
+                    out.println("</table>");
+                    out.println("<br /><input type='submit' name='submit' value='Suggest' onclick='return checkExecute();'>");
+                    out.println("</form>");
+                }
+                else{
+                    out.println("<br /> Semua account statement sudah memiliki pasangan.");
+                } 
+            }
+            else{
+                out.println("<br />Tidak ada data yang bisa dicocokkan (request deposit atau file).");
+            }
+        }
+        catch(Exception e){
+            e.printStackTrace();
+            out.println("<br/ > <b>Basis data error.</b>");
+            try{con.rollback();}catch(Exception ee){}
+        }
+        finally{
+            try{
+                if(con!=null) con.close();
+                if(rs!=null) rs.close();
+                if(stmt!=null) stmt.close();
+                if(pstmt!=null) pstmt.close();
+            }
+            catch(Exception e){}
+        }
+
+        %>
+
+	</stripes:layout-component>
+</stripes:layout-render>

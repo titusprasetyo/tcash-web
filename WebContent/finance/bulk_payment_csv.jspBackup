@@ -1,0 +1,284 @@
+<%@page import="java.io.*, java.util.*, java.text.*, java.sql.*"%>
+<%@ include file="/web-starter/taglibs.jsp"%>
+<%@page import="com.telkomsel.itvas.webstarter.User"%>
+<jsp:useBean id="DbCon" scope="page" class="tsel_tunai.DbCon"></jsp:useBean>
+<%
+String comm = request.getParameter("comm");
+
+
+%>
+//
+<stripes:layout-render name="/web-starter/layout/standard.jsp" title="Bulk Payment CSV Maker">
+	<stripes:layout-component name="contents">
+<%
+
+Connection con = null;
+Statement stmt = null;
+PreparedStatement pstmt = null;
+ResultSet rs = null;
+
+try{
+    //Buka dulu si databasenya
+    //Class.forName("oracle.jdbc.OracleDriver");
+    //con = DriverManager.getConnection("jdbc:oracle:thin:@10.2.114.121:1521:OPTUNAI", "tunai", "tunai123");
+	con = DbCon.getConnection();
+	
+
+    out.println("<table width='90%' border='1' cellspacing='0' cellpadding='0' bordercolor='#FFF6EF'>");
+    out.println("<tr><td colspan='10'><div align='right'><font color='#CC6633' size='2' face='Verdana, Arial, Helvetica, sans-serif'><strong>.:: Cashout List</strong></font></div></td></tr>");
+    
+    //out.println("<tr><td>Cashout ID</td><td>Merchant ID</td><td>Deposit Time</td><td>Amount</td><td>Note</td><td>Entry Login</td><td>Bank Acc No</td><td>Bank Acc Holder</td><td>Tsel Bank Acc</td><td>Bank Name</td></tr>");
+    //out.println();
+out.println("<tr><td bgcolor='#CC6633'><div align='center'><font color='#FFFFFF' size='1' face='Verdana, Arial, Helvetica, sans-serif'><strong>Cashout ID</strong></font></div></td>");
+out.println("<td bgcolor='#CC6633'><div align='center'><font color='#FFFFFF' size='1' face='Verdana, Arial, Helvetica, sans-serif'><strong>Merchant ID</strong></font></div></td>");
+out.println("<td bgcolor='#CC6633'><div align='center'><font color='#FFFFFF' size='1' face='Verdana, Arial, Helvetica, sans-serif'><strong>Deposit Time</strong></font></div></td>");
+out.println("<td bgcolor='#CC6633'><div align='center'><font color='#FFFFFF' size='1' face='Verdana, Arial, Helvetica, sans-serif'><strong>Amount</strong></font></div></td>");
+out.println("<td bgcolor='#CC6633'><div align='center'><font color='#FFFFFF' size='1' face='Verdana, Arial, Helvetica, sans-serif'><strong>Note</strong></font></div></td>");
+out.println("<td bgcolor='#CC6633'><div align='center'><font color='#FFFFFF' size='1' face='Verdana, Arial, Helvetica, sans-serif'><strong>Entry Login</strong></font></div></td>");
+out.println("<td bgcolor='#CC6633'><div align='center'><font color='#FFFFFF' size='1' face='Verdana, Arial, Helvetica, sans-serif'><strong>Bank Acc No</strong></font></div></td>");
+out.println("<td bgcolor='#CC6633'><div align='center'><font color='#FFFFFF' size='1' face='Verdana, Arial, Helvetica, sans-serif'><strong>Bank Acc Holder</strong></font></div></td>");
+out.println("<td bgcolor='#CC6633'><div align='center'><font color='#FFFFFF' size='1' face='Verdana, Arial, Helvetica, sans-serif'><strong>Tsel Bank Acc</strong></font></div></td>");
+out.println("<td bgcolor='#CC6633'><div align='center'><font color='#FFFFFF' size='1' face='Verdana, Arial, Helvetica, sans-serif'><strong>Bank Name</strong></font></div></td></tr>");
+    //pstmt = con.prepareStatement("select b.CASHOUT_ID, b.MERCHANT_ID, b.DEPOSIT_TIME, b.AMOUNT, b.NOTE, b.ENTRY_LOGIN, c.BANK_ACC_NO, c.BANK_ACC_HOLDER, c.TSEL_BANK_ACC, c.BANK_NAME from merchant a, merchant_cashout b, merchant_info c where b.MERCHANT_ID=a.MERCHANT_ID AND a.MERCHANT_INFO_ID=c.MERCHANT_INFO_ID AND b.IS_EXECUTED='1' AND b.PRINT_DATE IS NOT NULL AND b.COMPLETION_DATE IS NULL AND b.RECEIPT_ID IS NOT NULL AND b.ENTRY_LOGIN!= 'Daily Settlement' ORDER BY DEPOSIT_TIME DESC");
+    pstmt = con.prepareStatement("select b.CASHOUT_ID, b.MERCHANT_ID, b.DEPOSIT_TIME, b.AMOUNT, b.NOTE, b.ENTRY_LOGIN, c.BANK_ACC_NO, c.BANK_ACC_HOLDER, c.TSEL_BANK_ACC, c.BANK_NAME from merchant a, merchant_cashout b, merchant_info c where b.MERCHANT_ID=a.MERCHANT_ID AND a.MERCHANT_INFO_ID=c.MERCHANT_INFO_ID AND b.IS_EXECUTED='1' AND b.PRINT_DATE IS NOT NULL AND b.COMPLETION_DATE IS NULL AND b.RECEIPT_ID IS NOT NULL ORDER BY DEPOSIT_TIME DESC");
+	rs = pstmt.executeQuery();            
+    while(rs.next()){
+        //out.println("<tr><td>"+rs.getString("CASHOUT_ID")+"</td><td>"+rs.getString("MERCHANT_ID")+"</td><td>"+(rs.getTimestamp("DEPOSIT_TIME")).toString()+"</td><td>"+String.valueOf(rs.getInt("AMOUNT"))+"</td><td>"+rs.getString("NOTE")+"</td><td>"+rs.getString("ENTRY_LOGIN")+"</td><td>"+rs.getString("BANK_ACC_NO")+"</td><td>"+rs.getString("BANK_ACC_HOLDER")+"</td><td>"+rs.getString("TSEL_BANK_ACC")+"</td><td>"+rs.getString("BANK_NAME")+"</td></tr>");
+	out.println("<tr><td><div align='center'><font size='1' face='Verdana, Arial, Helvetica, sans-serif'>"+ rs.getString("CASHOUT_ID") +"</font></div></td>");
+	out.println("<td><div align='center'><font size='1' face='Verdana, Arial, Helvetica, sans-serif'>"+ rs.getString("MERCHANT_ID") +"</font></div></td>");
+	out.println("<td><div align='center'><font size='1' face='Verdana, Arial, Helvetica, sans-serif'>"+ rs.getString("DEPOSIT_TIME") +"</font></div></td>");
+	out.println("<td><div align='center'><font size='1' face='Verdana, Arial, Helvetica, sans-serif'>"+ rs.getString("AMOUNT") +"</font></div></td>");
+	out.println("<td><div align='center'><font size='1' face='Verdana, Arial, Helvetica, sans-serif'>"+ rs.getString("NOTE") +"</font></div></td>");
+	out.println("<td><div align='center'><font size='1' face='Verdana, Arial, Helvetica, sans-serif'>"+ rs.getString("ENTRY_LOGIN") +"</font></div></td>");
+	out.println("<td><div align='center'><font size='1' face='Verdana, Arial, Helvetica, sans-serif'>"+ rs.getString("BANK_ACC_NO") +"</font></div></td>");
+       out.println("<td><div align='center'><font size='1' face='Verdana, Arial, Helvetica, sans-serif'>"+ rs.getString("BANK_ACC_HOLDER") +"</font></div></td>");
+	out.println("<td><div align='center'><font size='1' face='Verdana, Arial, Helvetica, sans-serif'>"+ rs.getString("TSEL_BANK_ACC") +"</font></div></td>");
+	out.println("<td><div align='center'><font size='1' face='Verdana, Arial, Helvetica, sans-serif'>"+ rs.getString("BANK_NAME") +"</font></div></td></tr>");
+    }            
+    pstmt.close();rs.close();
+    out.println("</table>");
+        
+    if(comm!=null && comm.equalsIgnoreCase("save")){
+        //untuk keperluan save as csv
+        String DATE_FORMAT_NOW = "ddMMyyyy_HHmmss";
+        String DATE_FORMAT_NOW2 = "yyyyMMdd";
+        String DATE_FORMAT_NOW3 = "yyyyMMddHHmmss";
+        Calendar cal = Calendar.getInstance();
+        SimpleDateFormat sdf = new SimpleDateFormat(DATE_FORMAT_NOW);
+        String time=sdf.format(cal.getTime());
+        SimpleDateFormat sdf2 = new SimpleDateFormat(DATE_FORMAT_NOW2);
+        String time2=sdf2.format(cal.getTime());
+        SimpleDateFormat sdf3 = new SimpleDateFormat(DATE_FORMAT_NOW3);
+        String time3=sdf3.format(cal.getTime());
+        try{
+            String pathTes = application.getRealPath("/")+"CSV";
+            File fileTes = new File(pathTes);
+            if(!fileTes.exists())fileTes.mkdirs();
+        }catch(Exception eee){}
+        // parameter Mandiri
+        String fileName = "Mandiri_"+time+".csv";
+        String pathFile = application.getRealPath("/")+"CSV/"+fileName;
+//out.println("<script language='javascript'>alert('Path file = "+pathFile+"')</script>");
+
+        //String sqlcommand = "select b.CASHOUT_ID, b.MERCHANT_ID, b.DEPOSIT_TIME, b.AMOUNT, b.NOTE, b.ENTRY_LOGIN, c.BANK_ACC_NO, c.BANK_ACC_HOLDER, c.TSEL_BANK_ACC, c.BANK_NAME from merchant a, merchant_cashout b, merchant_info c where b.MERCHANT_ID=a.MERCHANT_ID AND a.MERCHANT_INFO_ID=c.MERCHANT_INFO_ID AND b.IS_EXECUTED='1' AND b.PRINT_DATE IS NOT NULL AND b.COMPLETION_DATE IS NULL AND b.RECEIPT_ID IS NOT NULL AND c.BANK_NAME LIKE '%andiri%' ORDER BY DEPOSIT_TIME DESC";
+        String ContentHeaderMarker = "P";
+        //String DebitAccountNumber = db.loadSQL("select distinct TSEL_BANK_ACC  from MERCHANT_INFO WHERE BANK_NAME = 'Mandiri'", "TSEL_BANK_ACC");
+        String DebitAccountNumber = "";
+
+        pstmt = con.prepareStatement("select distinct TSEL_BANK_ACC  from MERCHANT_INFO WHERE BANK_NAME = 'Mandiri'");
+        rs = pstmt.executeQuery();            
+        while(rs.next()){
+                DebitAccountNumber = rs.getString("TSEL_BANK_ACC");
+        }            
+        pstmt.close();rs.close();
+
+        String TransactionInstructionDate = time2;
+        String TotalDetailRecords = "";
+        //String TotalDetailRecords = db.getRowsCount(sqlcommand);
+        
+        //pstmt = con.prepareStatement("select Count(*) as jml from merchant a, merchant_cashout b, merchant_info c where b.MERCHANT_ID=a.MERCHANT_ID AND a.MERCHANT_INFO_ID=c.MERCHANT_INFO_ID AND b.IS_EXECUTED='1' AND b.PRINT_DATE IS NOT NULL AND b.COMPLETION_DATE IS NULL AND b.RECEIPT_ID IS NOT NULL AND b.ENTRY_LOGIN!= 'Daily Settlement' AND c.BANK_NAME LIKE '%andiri%'");
+        pstmt = con.prepareStatement("select Count(*) as jml from merchant a, merchant_cashout b, merchant_info c where b.MERCHANT_ID=a.MERCHANT_ID AND a.MERCHANT_INFO_ID=c.MERCHANT_INFO_ID AND b.IS_EXECUTED='1' AND b.PRINT_DATE IS NOT NULL AND b.COMPLETION_DATE IS NULL AND b.RECEIPT_ID IS NOT NULL AND c.BANK_NAME LIKE '%andiri%'");
+        rs = pstmt.executeQuery();            
+        while(rs.next()){
+            TotalDetailRecords = String.valueOf(rs.getInt("jml"));
+        }            
+        pstmt.close();rs.close();
+        
+        String TotalAmount = "";
+        
+        //pstmt = con.prepareStatement("select SUM(b.AMOUNT) AS TOTALAMOUNT from merchant a, merchant_cashout b, merchant_info c where b.MERCHANT_ID=a.MERCHANT_ID AND a.MERCHANT_INFO_ID=c.MERCHANT_INFO_ID  AND c.BANK_NAME LIKE '%andiri%' AND b.ENTRY_LOGIN!= 'Daily Settlement' AND b.PRINT_DATE IS NOT NULL AND b.COMPLETION_DATE IS NULL AND b.RECEIPT_ID IS NOT NULL AND b.IS_EXECUTED='1'");
+        pstmt = con.prepareStatement("select SUM(b.AMOUNT) AS TOTALAMOUNT from merchant a, merchant_cashout b, merchant_info c where b.MERCHANT_ID=a.MERCHANT_ID AND a.MERCHANT_INFO_ID=c.MERCHANT_INFO_ID  AND c.BANK_NAME LIKE '%andiri%' AND b.PRINT_DATE IS NOT NULL AND b.COMPLETION_DATE IS NULL AND b.RECEIPT_ID IS NOT NULL AND b.IS_EXECUTED='1'");
+        rs = pstmt.executeQuery();            
+        while(rs.next()){
+                TotalAmount = String.valueOf(rs.getInt("TOTALAMOUNT"));
+        }            
+        pstmt.close();rs.close();
+        
+        //String TotalAmount = db.loadSQL("select SUM(merchant_cashout.AMOUNT) AS TOTALAMOUNT from merchant, merchant_cashout, merchant_info where merchant_cashout.MERCHANT_ID=merchant.MERCHANT_ID AND merchant.MERCHANT_INFO_ID=merchant_info.MERCHANT_INFO_ID  AND merchant_info.BANK_NAME LIKE '%Mandiri%' AND merchant_cashout.IS_EXECUTED='1'","TOTALAMOUNT");
+
+        // parameter BNI
+        String fileName2 = "BNI_"+time+".csv";
+        String pathFile2 = application.getRealPath("/")+"CSV/"+fileName2;
+//out.println("<script language='javascript'>alert('Path file = "+pathFile2+"')</script>");
+
+        //String sqlcommand2 = "select b.CASHOUT_ID, b.MERCHANT_ID, b.DEPOSIT_TIME, b.AMOUNT, b.NOTE, b.ENTRY_LOGIN, c.BANK_ACC_NO, c.BANK_ACC_HOLDER, c.TSEL_BANK_ACC, c.BANK_NAME from merchant a, merchant_cashout b, merchant_info c where b.MERCHANT_ID=a.MERCHANT_ID AND a.MERCHANT_INFO_ID=c.MERCHANT_INFO_ID AND b.IS_EXECUTED='1' AND b.PRINT_DATE IS NOT NULL AND b.COMPLETION_DATE IS NULL AND b.RECEIPT_ID IS NOT NULL AND c.BANK_NAME LIKE '%BNI%' ORDER BY DEPOSIT_TIME DESC";
+        String HeaderMarker = "P";
+        
+        String RekDebet = "";
+        //String RekDebet = db.loadSQL("select distinct TSEL_BANK_ACC from TUNAI.MERCHANT_INFO WHERE BANK_NAME = 'BNI'", "TSEL_BANK_ACC");
+        
+        pstmt = con.prepareStatement("select distinct TSEL_BANK_ACC from MERCHANT_INFO WHERE BANK_NAME = 'BNI'");
+        rs = pstmt.executeQuery();
+        while(rs.next()){
+            RekDebet = rs.getString("TSEL_BANK_ACC");
+        }            
+        pstmt.close();rs.close();
+        
+        String FileCreationTime = time3;
+        //String TotalData = db.getRowsCount(sqlcommand2);
+        String TotalData = "";
+        
+        //pstmt = con.prepareStatement("select Count(*) as jml from merchant a, merchant_cashout b, merchant_info c where b.MERCHANT_ID=a.MERCHANT_ID AND a.MERCHANT_INFO_ID=c.MERCHANT_INFO_ID AND b.IS_EXECUTED='1' AND b.PRINT_DATE IS NOT NULL AND b.COMPLETION_DATE IS NULL AND b.RECEIPT_ID IS NOT NULL AND c.BANK_NAME LIKE '%BNI%' AND b.ENTRY_LOGIN!= 'Daily Settlement' ORDER BY DEPOSIT_TIME DESC");
+        pstmt = con.prepareStatement("select Count(*) as jml from merchant a, merchant_cashout b, merchant_info c where b.MERCHANT_ID=a.MERCHANT_ID AND a.MERCHANT_INFO_ID=c.MERCHANT_INFO_ID AND b.IS_EXECUTED='1' AND b.PRINT_DATE IS NOT NULL AND b.COMPLETION_DATE IS NULL AND b.RECEIPT_ID IS NOT NULL AND c.BANK_NAME LIKE '%BNI%' ORDER BY DEPOSIT_TIME DESC");
+        rs = pstmt.executeQuery();            
+        while(rs.next()){
+                TotalData = String.valueOf(rs.getInt("jml"));
+        }            
+        pstmt.close();rs.close();
+        
+        String JumlahBaris = String.valueOf(2+Integer.valueOf(TotalData));
+        String TanggalTransaksi = time2;
+
+        //String TotalNominal = db.loadSQL("select SUM(merchant_cashout.AMOUNT) AS TOTALAMOUNT from merchant, merchant_cashout, merchant_info where merchant_cashout.MERCHANT_ID=merchant.MERCHANT_ID AND merchant.MERCHANT_INFO_ID=merchant_info.MERCHANT_INFO_ID  AND merchant_info.BANK_NAME LIKE '%BNI%' AND merchant_cashout.IS_EXECUTED='1'","TOTALAMOUNT");
+        String TotalNominal = "";
+
+        //pstmt = con.prepareStatement("select SUM(b.AMOUNT) AS TOTALAMOUNT from merchant a, merchant_cashout b, merchant_info c where b.MERCHANT_ID=a.MERCHANT_ID AND a.MERCHANT_INFO_ID=c.MERCHANT_INFO_ID  AND c.BANK_NAME LIKE '%BNI%' AND b.IS_EXECUTED='1' AND b.PRINT_DATE IS NOT NULL AND b.COMPLETION_DATE IS NULL AND b.ENTRY_LOGIN!= 'Daily Settlement' AND b.RECEIPT_ID IS NOT NULL");
+        pstmt = con.prepareStatement("select SUM(b.AMOUNT) AS TOTALAMOUNT from merchant a, merchant_cashout b, merchant_info c where b.MERCHANT_ID=a.MERCHANT_ID AND a.MERCHANT_INFO_ID=c.MERCHANT_INFO_ID  AND c.BANK_NAME LIKE '%BNI%' AND b.IS_EXECUTED='1' AND b.PRINT_DATE IS NOT NULL AND b.COMPLETION_DATE IS NULL AND b.RECEIPT_ID IS NOT NULL");
+        rs = pstmt.executeQuery();
+        while(rs.next()){
+                TotalNominal = String.valueOf(rs.getInt("TOTALAMOUNT"));
+        }
+        pstmt.close();rs.close();
+
+        /*
+        //===========================
+        */
+        
+        
+
+        // SAVE Mandiri CSV
+        //String content = db.makeCSVInhouse("select merchant_cashout.CASHOUT_ID, merchant_cashout.MERCHANT_ID, merchant_cashout.AMOUNT, merchant_cashout.NOTE, merchant_cashout.ENTRY_LOGIN, merchant_info.BANK_ACC_NO, merchant_info.BANK_ACC_HOLDER, merchant_info.TSEL_BANK_ACC, merchant_info.BANK_NAME from merchant, merchant_cashout, merchant_info where merchant_cashout.MERCHANT_ID=merchant.MERCHANT_ID AND merchant.MERCHANT_INFO_ID=merchant_info.MERCHANT_INFO_ID  AND merchant_info.BANK_NAME LIKE '%Mandiri%' AND merchant_cashout.IS_EXECUTED='1'");
+        String content = "";
+        
+        //pstmt = con.prepareStatement("select b.CASHOUT_ID, b.MERCHANT_ID, b.DEPOSIT_TIME, b.AMOUNT, b.NOTE, b.ENTRY_LOGIN, c.BANK_ACC_NO, c.BANK_ACC_HOLDER, c.TSEL_BANK_ACC, c.BANK_NAME from merchant a, merchant_cashout b, merchant_info c where b.MERCHANT_ID=a.MERCHANT_ID AND a.MERCHANT_INFO_ID=c.MERCHANT_INFO_ID AND b.IS_EXECUTED='1' AND b.PRINT_DATE IS NOT NULL AND b.COMPLETION_DATE IS NULL AND b.RECEIPT_ID IS NOT NULL AND c.BANK_NAME LIKE '%andiri%' AND b.ENTRY_LOGIN!= 'Daily Settlement' ORDER BY DEPOSIT_TIME DESC");
+        pstmt = con.prepareStatement("select b.CASHOUT_ID, b.MERCHANT_ID, b.DEPOSIT_TIME, b.AMOUNT, b.NOTE, b.ENTRY_LOGIN, c.BANK_ACC_NO, c.BANK_ACC_HOLDER, c.TSEL_BANK_ACC, c.BANK_NAME from merchant a, merchant_cashout b, merchant_info c where b.MERCHANT_ID=a.MERCHANT_ID AND a.MERCHANT_INFO_ID=c.MERCHANT_INFO_ID AND b.IS_EXECUTED='1' AND b.PRINT_DATE IS NOT NULL AND b.COMPLETION_DATE IS NULL AND b.RECEIPT_ID IS NOT NULL AND c.BANK_NAME LIKE '%andiri%' ORDER BY DEPOSIT_TIME DESC");
+        rs = pstmt.executeQuery();            
+        while(rs.next()){
+            content+= rs.getString("BANK_ACC_NO")+",";
+            content+= rs.getString("BANK_ACC_HOLDER")+",";
+            content+=",,,IDR,";
+            content+= rs.getString("AMOUNT")+",";
+            //naruh remark disini, maksimum karakter 20 karakter
+            content+=rs.getString("NOTE")+" "+rs.getString("CASHOUT_ID")+",";
+            content+=",,";
+            content+= rs.getString("BANK_NAME")+",";
+            content+=",,,,,Y";
+            content+=",,,,,,,,,,,,,,,,,,,,,,,,";
+            content+= rs.getString("NOTE")+"\n";
+        }            
+        pstmt.close();rs.close();
+        
+        try{
+            File f = new File(pathFile);
+            if(!f.exists()){
+                f.createNewFile();
+                out.println("<a href='file_download.jsp?pathFile="+pathFile+"&fileName="+fileName+"'>"+fileName+"</a> <br />");
+            }else{
+                out.println("Error, file is exist <br />");
+            }
+        }
+        catch (Exception e){
+            out.println("File is error, "+e.getMessage()+"<br />");
+        }
+
+        //menulis ke file menggunakan FileWriter (MASIH MANDIRI)
+        try{
+            // Create file
+            BufferedWriter output = new BufferedWriter(new FileWriter(pathFile));
+            output.write(ContentHeaderMarker+","+DebitAccountNumber+","+TransactionInstructionDate+","+TotalDetailRecords+","+TotalAmount+"\n");
+            output.write(content);
+            // Close the output stream
+            output.close();
+        }catch (Exception e){//Catch exception if any
+            out.println("Error: " + e.getMessage()+"<br />");
+        }
+
+        
+        // SAVE BNI CSV
+        //String content2 = db.makeCSVInhouse2("select merchant_cashout.CASHOUT_ID, merchant_cashout.MERCHANT_ID, merchant_cashout.AMOUNT, merchant_cashout.NOTE, merchant_cashout.ENTRY_LOGIN, merchant_info.BANK_ACC_NO, merchant_info.BANK_ACC_HOLDER, merchant_info.TSEL_BANK_ACC, merchant_info.BANK_NAME from merchant, merchant_cashout, merchant_info where merchant_cashout.MERCHANT_ID=merchant.MERCHANT_ID AND merchant.MERCHANT_INFO_ID=merchant_info.MERCHANT_INFO_ID  AND merchant_info.BANK_NAME LIKE '%BNI%' AND merchant_cashout.IS_EXECUTED='1'");
+        String content2 = "";
+
+        //pstmt = con.prepareStatement("select b.CASHOUT_ID, b.MERCHANT_ID, b.DEPOSIT_TIME, b.AMOUNT, b.NOTE, b.ENTRY_LOGIN, c.BANK_ACC_NO, c.BANK_ACC_HOLDER, c.TSEL_BANK_ACC, c.BANK_NAME from merchant a, merchant_cashout b, merchant_info c where b.MERCHANT_ID=a.MERCHANT_ID AND a.MERCHANT_INFO_ID=c.MERCHANT_INFO_ID AND b.IS_EXECUTED='1' AND b.PRINT_DATE IS NOT NULL AND b.COMPLETION_DATE IS NULL AND b.RECEIPT_ID IS NOT NULL AND c.BANK_NAME LIKE '%BNI%' AND b.ENTRY_LOGIN!= 'Daily Settlement' ORDER BY DEPOSIT_TIME DESC");
+        pstmt = con.prepareStatement("select b.CASHOUT_ID, b.MERCHANT_ID, b.DEPOSIT_TIME, b.AMOUNT, b.NOTE, b.ENTRY_LOGIN, c.BANK_ACC_NO, c.BANK_ACC_HOLDER, c.TSEL_BANK_ACC, c.BANK_NAME from merchant a, merchant_cashout b, merchant_info c where b.MERCHANT_ID=a.MERCHANT_ID AND a.MERCHANT_INFO_ID=c.MERCHANT_INFO_ID AND b.IS_EXECUTED='1' AND b.PRINT_DATE IS NOT NULL AND b.COMPLETION_DATE IS NULL AND b.RECEIPT_ID IS NOT NULL AND c.BANK_NAME LIKE '%BNI%' ORDER BY DEPOSIT_TIME DESC");
+        rs = pstmt.executeQuery();
+        while(rs.next()){
+            content2+= rs.getString("BANK_ACC_NO")+",";
+            content2+= rs.getString("BANK_ACC_HOLDER")+",";
+            content2+= rs.getString("AMOUNT")+",";
+            //Disini naruh remarknya, ada 3 remark dengan masing2 remark maximum 100 karakter
+            content2+=rs.getString("NOTE")+" "+rs.getString("CASHOUT_ID")+",";
+            content2+=",,,,,,,,,,,,,N,,RefNumber,Y, BenRefNumber\n";
+        }
+        pstmt.close();rs.close();
+
+        try{
+            File f2 = new File(pathFile2);
+            if(!f2.exists()){
+                f2.createNewFile();
+                out.println("<a href='file_download.jsp?pathFile="+pathFile2+"&fileName="+fileName2+"'>"+fileName2+"</a> <br />");
+            }else{
+                out.println("Error, file is exist <br />");
+            }
+        }
+        catch (Exception e){
+            out.println("File is error, "+e.getMessage()+"<br />");
+        }
+
+        //menulis ke file menggunakan FileWriter (SUDAH BNI)
+        try{
+            // Create file
+
+            BufferedWriter output2 = new BufferedWriter(new FileWriter(pathFile2));
+            output2.write(FileCreationTime+","+JumlahBaris+"\n"+HeaderMarker+","+TanggalTransaksi+","+RekDebet+","+TotalData+","+TotalNominal+"\n");
+            output2.write(content2);
+            // Close the output stream
+            output2.close();
+            out.println("File has been written <br />");
+        }catch (Exception e){
+            out.println("Error: " + e.getMessage()+"<br />");
+        }/**/
+    }
+}
+catch(Exception e){
+	e.printStackTrace();
+	out.println("<br/ > <b>Basis data error, proses pencocokan tidak bisa dilakukan.</b>");
+	try{con.rollback();} catch(Exception e2){}
+}
+finally{
+	try{
+		if(con!=null) con.close();
+		if(rs!=null) rs.close();
+		if(stmt!=null) stmt.close();
+		if(pstmt!=null) pstmt.close();
+	}
+	catch(Exception e){}
+}
+%>
+                
+        <form action="bulk_payment_csv.jsp">
+            Save as CSV file
+            <input type="submit" value="Save" />
+            <input type="hidden" name="comm" value="save">
+        </form>
+	</stripes:layout-component>
+</stripes:layout-render>

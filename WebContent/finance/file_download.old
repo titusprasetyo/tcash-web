@@ -1,0 +1,34 @@
+<%@page import="java.io.*, java.util.*, java.text.*, java.sql.*"%>
+<%@ include file="/web-starter/taglibs.jsp"%>
+<%@page import="com.telkomsel.itvas.webstarter.User"%>
+
+<%
+String fileName = request.getParameter("fileName");
+String pathFile = request.getParameter("pathFile");
+
+if(fileName !=null && pathFile !=null){
+    try{
+        //menuliskan response
+        response.reset();
+        response.setContentType("application/text");
+        response.setHeader("Content-disposition","attachment; filename=" +fileName);
+
+        File file = new File(pathFile);
+        FileInputStream fileIn = new FileInputStream(file);
+        ServletOutputStream outPut = response.getOutputStream();
+
+        byte[] outputByte = new byte[4096];
+        //copy binary contect to output stream
+        while(fileIn.read(outputByte, 0, 4096) != -1)
+        {
+                outPut.write(outputByte, 0, 4096);
+        }
+        fileIn.close();
+        outPut.flush();
+        outPut.close();
+    }
+    catch (Exception e){
+        e.printStackTrace();
+    }
+}
+%>

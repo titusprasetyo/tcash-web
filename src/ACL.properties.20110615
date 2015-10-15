@@ -1,0 +1,100 @@
+root;1;/web-starter/ChangePassword.action;Change Password;1|2|3|4|5|
+root;2;#;Merchant;2|
+root;3;#;User Management;1|
+root;4;#;Payment Terminal;2|
+root;5;#;Loading Terminal;2|
+root;6;#;Settlement;2|
+root;7;#;Settlement;3|
+root;8;#;Problem Ticket;2|
+root;9;#;TCash Summary;3|
+root;10;#;Online Account;4|
+root;11;#;Merchant;4|7|
+root;12;#;Problem Ticket;4|7|
+root;13;#;Transaction History;2|3|6|
+root;14;#;Online Account Ext;7|
+
+2;20;/mcomm/reg_merchant.jsp;Registration;2|
+2;21;/mcomm/list_merchant.jsp;List;2|
+none;22;/mcomm/addMerchant2.jsp;Add Merchant Action;2|
+none;23;/mcomm/delete_merchant.jsp;Idem;2|
+
+3;30;/admin/add_account.jsp;Create Account;1|
+3;31;/admin/admin.jsp;List;1|
+none;32;/delete.jsp;Delete User;1|
+none;33;/edit_account.jsp;Edit User;1|
+none;34;/edit_account_eksekusi.jsp;Edit User Act;1|
+none;35;/admin/add_account_eksekusi.jsp;Add User Act;1|
+
+4;40;/mcomm/reg_list_payment.jsp;Create Payment Terminal;2|
+4;41;/mcomm/list_payment.jsp;List Payment Terminal;2|
+none;42;/mcomm/reg_payment.jsp;Idem;2|
+none;43;/mcomm/reg_payment_eksekusi.jsp;Idem;2|
+none;44;/mcomm/edit_payment.jsp;Idem;2|
+none;45;/mcomm/edit_payment_eksekusi.jsp;Idem;2|
+none;46;/mcomm/delete_payment_terminal.jsp;Idem;2|
+
+5;50;/mcomm/reg_list_loading.jsp;Create Loading Terminal;2|
+5;51;/mcomm/list_loading.jsp;List Loading Terminal;2|
+none;52;/mcomm/reg_loading.jsp;Idem;2|
+none;53;/mcomm/reg_loading_eksekusi.jsp;Idem;2|
+none;54;/mcomm/edit_loading.jsp;Idem;2|
+none;55;/mcomm/edit_loading_eksekusi.jsp;Idem;2|
+none;56;/mcomm/delete_loading_terminal.jsp;Idem;2|
+
+6;60;/mcomm/deposit_entry.jsp;Entry On Demand Deposit;2|
+6;61;/mcomm/deposit_suggest_od.jsp;Suggest Deposit;2|
+6;62;/mcomm/execute_cashout.jsp;Execute Cashout;2|
+6;63;/mcomm/dsettle_config.jsp;Daily Settlement Configuration;2|
+6;64;/mcomm/dsettle_holiday.jsp;Holiday Management;2|
+6;65;/mcomm/settle_monitor.jsp;Settlement Monitor;2|
+
+7;70;/finance/auto_deposit_approve_od.jsp;New Deposit Approval;3|
+7;71;/finance/deposit_approve_od.jsp;Deposit Approval;3|
+7;72;/finance/cashout_approve.jsp;Cashout Approval;3|
+7;73;/finance/new_cashout_approve.jsp;Bulk Cashout Approval;3|
+7;74;/mcomm/settle_monitor.jsp;Settlement Monitor;2|3|
+
+8;80;/mcomm/open_ticket.jsp;Open Ticket;2|
+8;81;/mcomm/closed_ticket.jsp;Closed Ticket;2|
+
+9;90;/finance/tcash_summary.jsp;Summary;3|
+
+10;100;/custcare/acc_info.jsp;Info;4|
+none;101;/custcare/acc_info2.jsp;Idem;4|
+none;102;/custcare/acc_info3.jsp;Idem;4|
+none;103;/custcare/acc_info4.jsp;Idem;4|
+10;104;/custcare/rpin.jsp;Reset PIN;4|
+none;105;/custcare/rpin2.jsp;Idem;4|
+none;106;/custcare/rpin3.jsp;Idem;4|
+10;107;/mcomm/trx_hist2_cust.jsp;Transaction History;2|3|4|6|
+none;108;/mcomm/trx_hist_csv_cust.jsp;Idem;2|3|4|6|
+10;109;/custcare/cmsisdn.jsp;Change MSISDN;4|
+none;1010;/custcare/cmsisdn2.jsp;Idem;4|
+none;1011;/custcare/cmsisdn3.jsp;Idem;4|
+
+11;110;/custcare/list_merchant.jsp;List;4|7|
+none;111;/custcare/merchant_detail.jsp;Idem;4|7|
+11;112;/custcare/search_merchant.jsp;Search;4|7|
+none;113;/custcare/search_merchant2.jsp;Idem;4|7|
+
+12;120;/custcare/ticket_create.jsp;Create;4|7|
+12;121;/custcare/ticket_list.jsp;List;4|7|
+12;122;/custcare/ticket_search.jsp;Search;4|7|
+none;123;/custcare/ticket_create2.jsp;Idem;4|7|
+none;124;/custcare/ticket_search2.jsp;Idem;4|7|
+
+13;130;/mcomm/trx_hist2.jsp;Merchant Transaction History;2|3|6|
+none;131;/mcomm/trx_hist_csv.jsp;Idem;2|3|6|
+13;132;/mcomm/trx_hist2_cust.jsp;Customer Transaction History;2|3|4|6|
+none;133;/mcomm/trx_hist_csv_cust.jsp;Idem;2|3|6|
+
+none;100;/UserManagement.action;User Management Action;1|2|
+none;101;/refunder/FileStreamer.action;File Streamer;1|2|3|4|7|
+none;102;/smscrew/push/ViewDetailed.action;View Detail Pull Action;3|
+none;103;/push/ViewDetailedPush.jsp;View Detail Pull;3|
+none;104;/smscrew/crew/EditCrew.action;;3|
+none;105;/system/Configuration.jsp;Configuration;3|
+none;106;/crew/EditCrew.jsp;;3|
+none;107;/smscrew/crew/ViewCrew.action;;3|
+none;108;/smscrew/system/ViewUser.action;;1|2|3|
+

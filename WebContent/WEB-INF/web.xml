@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+
+<web-app xmlns="http://java.sun.com/xml/ns/j2ee"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee
+         http://java.sun.com/xml/ns/j2ee/web-app_2_4.xsd"
+         version="2.4">
+
+    <description>
+      TCash Internal Web Interface
+    </description>
+    <display-name>TCash Internal Web Interface</display-name>
+    
+    <welcome-file-list>
+        <welcome-file>web-starter/Login.jsp</welcome-file>
+    </welcome-file-list>
+
+    <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+    <!--              Configuration of the Stripes Filter.                   -->
+    <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+    <filter>
+        <description>
+            Provides essential configuration and request processing services
+            for the Stripes framework.
+        </description>
+        <display-name>Stripes Filter</display-name>
+        <filter-name>StripesFilter</filter-name>
+        <filter-class>net.sourceforge.stripes.controller.StripesFilter</filter-class>
+
+        <!-- Optional init parameters for the Stripes Filter. -->
+        <init-param>
+            <param-name>ActionResolver.UrlFilters</param-name>
+            <param-value>WEB-INF/classes</param-value>
+        </init-param>
+        <init-param>
+            <param-name>ActionResolver.PackageFilters</param-name>
+            <param-value>*</param-value>
+        </init-param>
+        <init-param>
+            <param-name>ActionBeanContext.Class</param-name>
+            <param-value>com.telkomsel.itvas.webstarter.WebStarterActionBeanContext</param-value>
+        </init-param>
+        <init-param>
+			<param-name>LocalePicker.Locales</param-name>
+			<param-value>en_US:US-ASCII,ja:Shift_JIS</param-value>
+		</init-param>
+    </filter>
+
+    <filter-mapping>
+        <filter-name>StripesFilter</filter-name>
+        <url-pattern>*.jsp</url-pattern>
+        <dispatcher>REQUEST</dispatcher>
+    </filter-mapping>
+
+    <filter-mapping>
+        <filter-name>StripesFilter</filter-name>
+        <servlet-name>StripesDispatcher</servlet-name>
+        <dispatcher>REQUEST</dispatcher>
+    </filter-mapping>
+
+    <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+    <!--         Configuration of Bugzooky security filter.                  -->
+    <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+    <filter>
+        <description>Provides login security for Bugzooky</description>
+        <filter-name>BugzookySecurityFilter</filter-name>
+        <filter-class>com.telkomsel.itvas.webstarter.DefaultAccessFilter</filter-class>
+    </filter>
+
+    <filter-mapping>
+        <filter-name>BugzookySecurityFilter</filter-name>
+        <url-pattern>/web-starter/*</url-pattern>
+        <dispatcher>REQUEST</dispatcher>
+    </filter-mapping>
+    <filter-mapping>
+        <filter-name>BugzookySecurityFilter</filter-name>
+        <url-pattern>*.action</url-pattern>
+        <dispatcher>REQUEST</dispatcher>
+    </filter-mapping>
+    <filter-mapping>
+        <filter-name>BugzookySecurityFilter</filter-name>
+        <url-pattern>/push/*</url-pattern>
+        <dispatcher>REQUEST</dispatcher>
+    </filter-mapping>
+    <filter-mapping>
+        <filter-name>BugzookySecurityFilter</filter-name>
+        <url-pattern>/pull/*</url-pattern>
+        <dispatcher>REQUEST</dispatcher>
+    </filter-mapping>
+    <filter-mapping>
+        <filter-name>BugzookySecurityFilter</filter-name>
+        <url-pattern>/finance/*</url-pattern>
+        <dispatcher>REQUEST</dispatcher>
+    </filter-mapping>
+    <filter-mapping>
+        <filter-name>BugzookySecurityFilter</filter-name>
+        <url-pattern>/Dashboard.jsp</url-pattern>
+        <dispatcher>REQUEST</dispatcher>
+    </filter-mapping>
+    <filter-mapping>
+        <filter-name>BugzookySecurityFilter</filter-name>
+        <url-pattern>/FtpFiles.jsp</url-pattern>
+        <dispatcher>REQUEST</dispatcher>
+    </filter-mapping>
+    <filter-mapping>
+        <filter-name>BugzookySecurityFilter</filter-name>
+        <url-pattern>*.jsp</url-pattern>
+        <dispatcher>REQUEST</dispatcher>
+    </filter-mapping>
+    <filter-mapping>
+        <filter-name>BugzookySecurityFilter</filter-name>
+        <url-pattern>/custcare/*</url-pattern>
+        <dispatcher>REQUEST</dispatcher>
+    </filter-mapping>
+    <filter-mapping>
+        <filter-name>BugzookySecurityFilter</filter-name>
+        <url-pattern>/mcomm/*</url-pattern>
+        <dispatcher>REQUEST</dispatcher>
+    </filter-mapping>
+
+    <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+    <!--         Configuration of the Stripes dispatcher Servlet.            -->
+    <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+    <servlet>
+        <servlet-name>StripesDispatcher</servlet-name>
+        <servlet-class>net.sourceforge.stripes.controller.DispatcherServlet</servlet-class>
+        <load-on-startup>1</load-on-startup>
+    </servlet>
+
+    <servlet-mapping>
+        <servlet-name>StripesDispatcher</servlet-name>
+        <url-pattern>/dispatcher</url-pattern>
+    </servlet-mapping>
+
+    <servlet-mapping>
+        <servlet-name>StripesDispatcher</servlet-name>
+        <url-pattern>/action/*</url-pattern>
+    </servlet-mapping>
+
+    <servlet-mapping>
+        <servlet-name>StripesDispatcher</servlet-name>
+        <url-pattern>*.action</url-pattern>
+    </servlet-mapping>
+    
+   <servlet>
+        <servlet-name>FileUploadHandler</servlet-name>
+        <servlet-class>com.agit.tcash.recon.uihandler.FileUploadHandler</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>FileUploadHandler</servlet-name>
+        <url-pattern>/upload</url-pattern>
+    </servlet-mapping>
+    
+    <servlet>
+        <servlet-name>ManualAdjustHandler</servlet-name>
+        <servlet-class>com.agit.tcash.recon.uihandler.ManualAdjustHandler</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>ManualAdjustHandler</servlet-name>
+        <url-pattern>/adjust</url-pattern>
+    </servlet-mapping>
+        
+    <error-page>
+        <error-code>500</error-code>
+        <location>/error_page.html</location>
+    </error-page>
+    <error-page>
+        <error-code>404</error-code>
+        <location>/page_not_found.html</location>
+    </error-page>  
+</web-app>

@@ -1,0 +1,393 @@
+<%-- 
+    Document   : auto_deposit_approve_od
+    Created on : Apr 5, 2010, 12:04:39 PM
+    Author     : madeady
+--%>
+
+<%@page import="java.io.*, java.util.*, java.text.*, java.sql.*"%>
+<%@ include file="/web-starter/taglibs.jsp"%>
+<%@page import="com.telkomsel.itvas.webstarter.User"%>
+<jsp:useBean id="DbCon" scope="page" class="tsel_tunai.DbCon"></jsp:useBean>
+<jsp:useBean id="UTx" scope="request" class="tsel_tunai.UssdTx"></jsp:useBean>
+
+<%
+//keperluan melakukan update tsel_merchant_account, tsel_merchant_account_history, merchant_deposit
+String userName = "finance";
+
+//keperluan untuk melakukan pencocokan
+String []   depositID = request.getParameterValues("deposit_id"),
+            suggestedMercId = request.getParameterValues("suggestedMercId"),
+            fileID1 = request.getParameterValues("file_id1"),
+            fileID2 = request.getParameterValues("file_id2"),
+            fileID3 = request.getParameterValues("file_id3");
+
+//keperluan untuk akses basisdatanya
+Connection con = null;
+Statement stmt = null;
+PreparedStatement pstmt = null;
+ResultSet rs = null;
+String sql = "";
+String key1 = "", key2 = "", key3 = "", dID = "";
+
+%>
+
+<stripes:layout-render name="/web-starter/layout/standard.jsp" title="Approve Merchant Deposit">
+	<stripes:layout-component name="contents">
+
+        <script language="JavaScript">
+        <!--
+        function checkExecute(){
+                with(document)
+                        return confirm("Do you really want to execute these deposit?");
+        }        
+        //-->
+</script>
+
+<%
+//out.println("<h1>Finance</h1>");
+try{
+    //Buka dulu si databasenya
+    Class.forName("oracle.jdbc.OracleDriver");
+    con = DriverManager.getConnection("jdbc:oracle:thin:@10.2.114.121:1521:OPTUNAI", "tunai", "tunai123");
+
+
+%>
+       
+<%
+    //PROSES UPDATE FILE DAN RECORD YANG BERSESUAIAN
+    if(depositID!=null&&fileID1!=null&&fileID2!=null&&fileID3!=null){
+        //UPDATING TABEL
+        String [][] retval = new String[depositID.length][2];
+        String [][] retvalFile = new String[depositID.length][2];
+        Boolean statusUpdate = true;
+		con.setAutoCommit(false);
+        for(int i=0;i<depositID.length;i++){
+            dID = depositID[i];
+			key1 = fileID1[i];
+			key2 = fileID2[i];
+			key3 = fileID3[i];
+			//UPDATE DEPOSIT
+            retval[i]= UTx.doMerchantDeposit(depositID[i]);
+            //UPDATE UPLOADED FILE
+            //retvalFile[i] = doFileDeposit(fileID1[i],fileID2[i],fileID3[i],depositID[i], DbCon);
+			// ========================================
+			retvalFile[i][0] = "04";
+			retvalFile[i][1] = "internal_problem";
+			try {
+				//Class.forName("oracle.jdbc.OracleDriver");
+				//con = DbCon.getConnection();
+				
+				
+				sql = "UPDATE ACC_STATEMENT SET REF='"+dID+"', STATUS='1' WHERE TX_DATE=TO_DATE('"+key1.substring(0,10)+"', 'YYYY-MM-DD') AND DESCRIPTION='"+key2+"' AND TIPE='C' AND AMOUNT="+key3;
+				pstmt = con.prepareStatement(sql);
+
+				pstmt.executeUpdate();
+				pstmt.close();
+
+				
+				retvalFile[i][0] = "00"; retvalFile[i][1] = "success";
+				} catch (Exception e){
+				  retvalFile[i][0] = "04";
+				  retvalFile[i][1] = "internal_problem";
+				  e.printStackTrace(System.out);
+				  try { con.rollback(); } catch(Exception e2){}
+				} finally {
+				  if (con != null){
+					try {
+					  con.setAutoCommit(true);
+					} catch (Exception ee) {}
+				  }
+				}
+			
+			// ========================================
+            if(!retval[i][0].equalsIgnoreCase("00")) statusUpdate &=false;
+            if(!retvalFile[i][0].equalsIgnoreCase("00")) statusUpdate &=false;
+        }
+
+        if(statusUpdate){
+			con.commit();
+			con.setAutoCommit(true);
+            pstmt = con.prepareStatement("INSERT INTO activity_log (userlogin, access_time, activity, note, ip) VALUES (?, SYSDATE, ?, ?, ?)");
+            pstmt.clearParameters();
+            pstmt.setString(1, userName);
+            pstmt.setString(2, "Approve On Demand Deposit");
+            String idCollection = "Success: ";
+            for(int i=0;i<depositID.length;i++){
+                pstmt.setString(3, idCollection = idCollection +" | "+ depositID[i]);
+            }
+            pstmt.setString(4, request.getRemoteAddr());
+            pstmt.executeUpdate();
+            pstmt.close();
+            out.println("<script language='javascript'>alert('Approve deposit successful.')</script>");
+        }
+        else{
+            out.println("<script language='javascript'>alert('Approve deposit unsuccessful, error.')</script>");
+        }
+    }
+%>
+            
+<%
+    //PENCOCOKAN ANTARA REQUEST DEPOSIT DAN ACCOUNT STATEMENT DIMULAI
+    //untuk keperluan pencocokan
+    int jmlFileInt = 0, jmlRecordInt = 0;
+
+    pstmt = con.prepareStatement("SELECT COUNT(*) AS jmlFile FROM ACC_STATEMENT WHERE STATUS='0' AND TIPE='C' AND REF IS NULL");
+    rs = pstmt.executeQuery();
+    while(rs.next()){
+        jmlFileInt = rs.getInt("jmlFile");
+    }
+    pstmt.close();rs.close();
+
+    //pstmt = con.prepareStatement("SELECT COUNT(*) AS jmlRecord FROM MERCHANT_DEPOSIT WHERE IS_EXECUTED='0' AND entry_login != 'Daily Settlement'");
+    pstmt = con.prepareStatement("SELECT COUNT(*) AS jmlRecord FROM MERCHANT_DEPOSIT WHERE IS_EXECUTED='0'");
+    rs = pstmt.executeQuery();
+    while(rs.next()){
+        jmlRecordInt = rs.getInt("jmlRecord");
+    }
+    pstmt.close();rs.close();
+
+    //cek kalau ada request deposit atau account statement yang akan dibandingkan
+    if (jmlFileInt!=0 && jmlRecordInt!=0){
+        //load dari tabel ke array HasilFile
+        ArrayList<String> tabelFile = new ArrayList<String>();
+        pstmt = con.prepareStatement("SELECT TX_DATE, DESCRIPTION, AMOUNT FROM ACC_STATEMENT WHERE STATUS='0' AND TIPE='C' AND REF IS NULL");
+        rs = pstmt.executeQuery();
+        while(rs.next()){
+            tabelFile.add((rs.getTimestamp(1)).toString()+","+rs.getString(2)+","+rs.getString(3));
+        }
+        pstmt.close();rs.close();
+
+        String matriksFile[][] = new String[jmlFileInt][3];
+
+        //load matriksFilenya
+        for (int i=0;i<jmlFileInt;i++){
+            matriksFile[i] = tabelFile.get(i).split(",");
+        }
+
+        ArrayList<String> tabelDeposit = new ArrayList<String>();
+        //pstmt = con.prepareStatement("SELECT DEPOSIT_TIME, MERCHANT_ID, AMOUNT, DEPOSIT_ID FROM MERCHANT_DEPOSIT WHERE IS_EXECUTED='0' AND entry_login != 'Daily Settlement'");
+        pstmt = con.prepareStatement("SELECT DEPOSIT_TIME, MERCHANT_ID, AMOUNT, DEPOSIT_ID FROM MERCHANT_DEPOSIT WHERE IS_EXECUTED='0'");
+        rs = pstmt.executeQuery();
+        while(rs.next()){
+            tabelDeposit.add((rs.getTimestamp(1)).toString()+","+rs.getString(2)+","+rs.getString(3)+","+rs.getString(4));
+        }
+        pstmt.close();rs.close();
+
+        //load tabel merchant deposit ke array
+
+        String matriksDeposit[][] = new String[jmlRecordInt][4];
+        //load matriksDepositnya
+        for (int i=0;i<jmlRecordInt;i++){
+            matriksDeposit[i] = tabelDeposit.get(i).split(",");
+        }
+
+        //load array pencocokan
+        int [] matchedOnes = new int [jmlRecordInt];
+        for (int i=0;i<jmlRecordInt;i++){
+            matchedOnes[i] = 0;
+        }
+        //sesudah me-load kedua matriks, saatnya mencocokan dan menaruhnya ke 4 array
+        int [] idMatch = new int[50], idUnMatch = new int[50], fileIdMatch = new int[50], fileIdUnMatch = new int[50];
+        int idMatchInt = 0, idUnMatchInt = 0, fileIdMatchInt = 0, fileIdUnMatchInt = 0;
+
+        //proses mencocokan
+        for(int i=0;i<jmlFileInt;i++){
+            for(int j=0;j<jmlRecordInt;j++){
+                if(/*((matriksFile[i][0].substring(0, 10)).equalsIgnoreCase(matriksDeposit[j][0].substring(0, 10)))&&*/(matriksFile[i][2].equalsIgnoreCase(matriksDeposit[j][2]))&&(matriksFile[i][1].contains(matriksDeposit[j][1]))&&matchedOnes[j]==0){
+                    //mulai pencocokan, kalau cocok masukin ke array hasil idMatch dan fileIdMatch
+                    idMatch[idMatchInt] = j;
+                    fileIdMatch[fileIdMatchInt] = i;
+                    idMatchInt++;
+                    fileIdMatchInt++;
+                    matchedOnes[j] = 1;
+                    break;
+                }
+            }
+        }
+
+        //kita bedakan menjadi dua, yang satu kalau sudah pernah ada yang cocok sebelumnya, yang satu lagi kalau ga ada yang cocok, berarti yang diambil belum cocok semua.
+
+        if(idMatchInt!=0){
+            //keluarkan hasil pencocokan
+            out.println("<table width='90%' border='1' cellspacing='0' cellpadding='0' bordercolor='#FFF6EF'>");
+			out.println("<tr><td colspan='9'><div align='right'><font color='#CC6633' size='2' face='Verdana, Arial, Helvetica, sans-serif'><strong>.:: Deposit  List</strong></font></div></td></tr>");
+			out.println("<tr><td bgcolor='#CC6633'><div align='center'><font color='#FFFFFF' size='1' face='Verdana, Arial, Helvetica, sans-serif'><strong>Baris File</strong></font></div></td>");
+			out.println("<td bgcolor='#CC6633'><div align='center'><font color='#FFFFFF' size='1' face='Verdana, Arial, Helvetica, sans-serif'><strong>Transaction Date</strong></font></div></td>");
+			out.println("<td bgcolor='#CC6633'><div align='center'><font color='#FFFFFF' size='1' face='Verdana, Arial, Helvetica, sans-serif'><strong>Description</strong></font></div></td>");
+			out.println("<td bgcolor='#CC6633'><div align='center'><font color='#FFFFFF' size='1' face='Verdana, Arial, Helvetica, sans-serif'><strong>Amount</strong></font></div></td>");
+			out.println("<td bgcolor='#CC6633'><div align='center'><font color='#FFFFFF' size='1' face='Verdana, Arial, Helvetica, sans-serif'><strong>Baris Record</strong></font></div></td>");
+			out.println("<td bgcolor='#CC6633'><div align='center'><font color='#FFFFFF' size='1' face='Verdana, Arial, Helvetica, sans-serif'><strong>Deposit Date</strong></font></div></td>");
+			out.println("<td bgcolor='#CC6633'><div align='center'><font color='#FFFFFF' size='1' face='Verdana, Arial, Helvetica, sans-serif'><strong>Merchant ID</strong></font></div></td>");
+			out.println("<td bgcolor='#CC6633'><div align='center'><font color='#FFFFFF' size='1' face='Verdana, Arial, Helvetica, sans-serif'><strong>Deposit Amount</strong></font></div></td>");
+			out.println("<td bgcolor='#CC6633'><div align='center'><font color='#FFFFFF' size='1' face='Verdana, Arial, Helvetica, sans-serif'><strong>Deposit ID</strong></font></div></td></tr>");
+
+            for(int i=0;i<idMatchInt;i++){
+                /*out.println("<tr>");
+                    out.println("<td>"+fileIdMatch[i]+"</td><td>"+matriksFile[fileIdMatch[i]][0]+"</td><td>"+matriksFile[fileIdMatch[i]][1]+"</td><td>"+matriksFile[fileIdMatch[i]][2]+"</td>   <td>"+idMatch[i]+"</td><td>"+matriksDeposit[idMatch[i]][0]+"</td><td>"+matriksDeposit[idMatch[i]][1]+"</td><td>"+matriksDeposit[idMatch[i]][2]+"</td><td>"+matriksDeposit[idMatch[i]][3]+"</td>");
+                out.println("</tr>");*/
+
+			out.println("<tr><td><div align='center'><font size='1' face='Verdana, Arial, Helvetica, sans-serif'>"+ fileIdMatch[i] +"</font></div></td>");
+			out.println("<td><div align='center'><font size='1' face='Verdana, Arial, Helvetica, sans-serif'>"+ matriksFile[fileIdMatch[i]][0] +"</font></div></td>");
+			out.println("<td><div align='center'><font size='1' face='Verdana, Arial, Helvetica, sans-serif'>"+ matriksFile[fileIdMatch[i]][1] +"</font></div></td>");
+			out.println("<td><div align='center'><font size='1' face='Verdana, Arial, Helvetica, sans-serif'>"+ matriksFile[fileIdMatch[i]][2] +"</font></div></td>");
+			out.println("<td><div align='center'><font size='1' face='Verdana, Arial, Helvetica, sans-serif'>"+ idMatch[i] +"</font></div></td>");
+			out.println("<td><div align='center'><font size='1' face='Verdana, Arial, Helvetica, sans-serif'>"+ matriksDeposit[idMatch[i]][0] +"</font></div></td>");
+			out.println("<td><div align='center'><font size='1' face='Verdana, Arial, Helvetica, sans-serif'>"+ matriksDeposit[idMatch[i]][1] +"</font></div></td>");
+			out.println("<td><div align='center'><font size='1' face='Verdana, Arial, Helvetica, sans-serif'>"+ matriksDeposit[idMatch[i]][2] +"</font></div></td>");
+			out.println("<td><div align='center'><font size='1' face='Verdana, Arial, Helvetica, sans-serif'>"+ matriksDeposit[idMatch[i]][3] +"</font></div></td></tr>");
+
+
+            }
+            out.println("</table>");
+            //membuat form untuk approve all
+            out.println("<form action='auto_deposit_approve_od.jsp' method='get'>");
+            //pertama bikin hidden input untuk DEPOSIT_ID yang akan diupdate statusnya
+            for(int i=0;i<idMatchInt;i++){
+                out.println("<input type='hidden' name='deposit_id' value='"+matriksDeposit[idMatch[i]][3]+"'>");
+                out.println("<input type='hidden' name='file_id1' value='"+matriksFile[fileIdMatch[i]][0]+"'>");
+                out.println("<input type='hidden' name='file_id2' value='"+matriksFile[fileIdMatch[i]][1]+"'>");
+                out.println("<input type='hidden' name='file_id3' value='"+matriksFile[fileIdMatch[i]][2]+"'>");
+            }
+            out.println("<input type='submit' value='Approve' onclick='return checkExecute();'>");
+            out.println("</form>");
+
+            //DIBAWAH INI UNTUK YANG TIDAK MEMPUNYAI PASANGAN
+            Boolean status;
+            //inisialisasi request atau file yang tidak mempunyai pasangan
+            //tabel record
+            for(int i=0;i<jmlRecordInt;i++){
+                status = true;
+                for(int j=0;j<idMatchInt;j++){
+                    if(i!=idMatch[j]){
+                        status&=false;
+                    }
+                    else{
+                        status=true;
+                        break;
+                    }
+                }
+                if (status==false) {
+                    idUnMatch[idUnMatchInt]=i;
+                    idUnMatchInt++;
+                }
+            }
+            //tabel file
+            for(int i=0;i<jmlFileInt;i++){
+                status = true;
+                for(int j=0;j<fileIdMatchInt;j++){
+                    if(i!=fileIdMatch[j]){
+                        status&=false;
+                    }
+                    else{
+                        status=true;
+                        break;
+                    }
+                }
+                if (status==false) {
+                    fileIdUnMatch[fileIdUnMatchInt]=i;
+                    fileIdUnMatchInt++;
+                }
+            }
+        }
+        else{
+            out.println("<br />Tidak ada request deposit dan account statement yang cocok.");
+            for(int i=0;i<jmlRecordInt;i++){
+                idUnMatch[idUnMatchInt] = i;
+                idUnMatchInt++;
+            }
+            for(int i=0;i<jmlFileInt;i++){
+                fileIdUnMatch[fileIdUnMatchInt] = i;
+                fileIdUnMatchInt++;
+            }
+        }
+
+        //KELUARKAN HASIL SUGESTI DARI ADMIN JIKA ADA
+
+        int jmlSugHasilInt = 0;
+        pstmt = con.prepareStatement("SELECT COUNT(*) AS JML FROM MERCHANT_DEPOSIT A ,ACC_STATEMENT B WHERE A.DEPOSIT_ID = B.REF AND B.TIPE='C' AND B.REF IS NOT NULL AND B.STATUS='0'");
+        rs = pstmt.executeQuery();
+        while(rs.next()){
+                jmlSugHasilInt = rs.getInt("JML");
+        }
+        pstmt.close();rs.close();
+        if (jmlSugHasilInt!=0){
+            out.println("<hr /> Untuk sugesti pasangan deposit dan account statement dari admin adalah : ");
+            ArrayList<String> sugHasil = new ArrayList<String>();
+            pstmt = con.prepareStatement("SELECT B.TX_DATE, B.DESCRIPTION, B.AMOUNT, A.DEPOSIT_TIME, A.MERCHANT_ID, A.AMOUNT, A.DEPOSIT_ID FROM MERCHANT_DEPOSIT A ,ACC_STATEMENT B WHERE A.DEPOSIT_ID = B.REF AND B.TIPE='C' AND B.REF IS NOT NULL AND B.STATUS='0'");
+            rs = pstmt.executeQuery();
+            while(rs.next()){
+                    sugHasil.add((rs.getTimestamp(1)).toString()+","+rs.getString(2)+","+rs.getString(3)+","+(rs.getTimestamp(4)).toString()+","+rs.getString(5)+","+rs.getString(6)+","+rs.getString(7));
+            }
+            pstmt.close();rs.close();
+            String [][] matriksSugHasil = new String [jmlSugHasilInt][7];
+            for(int i=0;i<jmlSugHasilInt;i++){
+                matriksSugHasil [i] = sugHasil.get(i).split(",");
+            }
+           
+			out.println("<table width='90%' border='1' cellspacing='0' cellpadding='0' bordercolor='#FFF6EF'>");       			
+			out.println("<tr><td colspan='7'><div align='right'><font color='#CC6633' size='2' face='Verdana, Arial, Helvetica, sans-serif'><strong>.:: Suggestion List</strong></font></div></td></tr>");
+			out.println("<tr><td bgcolor='#CC6633'><div align='center'><font color='#FFFFFF' size='1' face='Verdana, Arial, Helvetica, sans-serif'><strong>Transaction Date</strong></font></div></td>");
+			out.println("<td bgcolor='#CC6633'><div align='center'><font color='#FFFFFF' size='1' face='Verdana, Arial, Helvetica, sans-serif'><strong>Description</strong></font></div></td>");
+			out.println("<td bgcolor='#CC6633'><div align='center'><font color='#FFFFFF' size='1' face='Verdana, Arial, Helvetica, sans-serif'><strong>Amount</strong></font></div></td>");
+			out.println("<td bgcolor='#CC6633'><div align='center'><font color='#FFFFFF' size='1' face='Verdana, Arial, Helvetica, sans-serif'><strong>Deposit Time</strong></font></div></td>");
+			out.println("<td bgcolor='#CC6633'><div align='center'><font color='#FFFFFF' size='1' face='Verdana, Arial, Helvetica, sans-serif'><strong>Merchant ID</strong></font></div></td>");
+			out.println("<td bgcolor='#CC6633'><div align='center'><font color='#FFFFFF' size='1' face='Verdana, Arial, Helvetica, sans-serif'><strong>Deposit Amount</strong></font></div></td>");
+			out.println("<td bgcolor='#CC6633'><div align='center'><font color='#FFFFFF' size='1' face='Verdana, Arial, Helvetica, sans-serif'><strong>Deposit ID</strong></font></div></td></tr>");
+
+            for(int i=0;i<jmlSugHasilInt;i++){
+                /*out.println("<tr>");
+                out.println("<td>"+matriksSugHasil[i][0]+"</td> <td>"+matriksSugHasil[i][1]+"</td> <td>"+matriksSugHasil[i][2]+"</td> <td>"+matriksSugHasil[i][3]+"</td> <td>"+matriksSugHasil[i][4]+"</td> <td>"+matriksSugHasil[i][5]+"</td> <td>"+matriksSugHasil[i][6]+"</td>");
+                out.println("</tr>");*/
+
+			out.println("<tr><td><div align='center'><font size='1' face='Verdana, Arial, Helvetica, sans-serif'>"+ matriksSugHasil[i][0] +"</font></div></td>");
+			out.println("<td><div align='center'><font size='1' face='Verdana, Arial, Helvetica, sans-serif'>"+ matriksSugHasil[i][1] +"</font></div></td>");
+			out.println("<td><div align='center'><font size='1' face='Verdana, Arial, Helvetica, sans-serif'>"+ matriksSugHasil[i][2] +"</font></div></td>");
+			out.println("<td><div align='center'><font size='1' face='Verdana, Arial, Helvetica, sans-serif'>"+ matriksSugHasil[i][3] +"</font></div></td>");
+			out.println("<td><div align='center'><font size='1' face='Verdana, Arial, Helvetica, sans-serif'>"+ matriksSugHasil[i][4] +"</font></div></td>");
+			out.println("<td><div align='center'><font size='1' face='Verdana, Arial, Helvetica, sans-serif'>"+ matriksSugHasil[i][5] +"</font></div></td>");
+			out.println("<td><div align='center'><font size='1' face='Verdana, Arial, Helvetica, sans-serif'>"+ matriksSugHasil[i][6] +"</font></div></td></tr>");
+
+            }
+            out.println("</table>");
+
+            out.println("<form action='auto_deposit_approve_od.jsp' method='get'>");
+            for(int i=0;i<jmlSugHasilInt;i++){
+                out.println("<input type='hidden' name='deposit_id' value='"+matriksSugHasil[i][6]+"'>");
+                out.println("<input type='hidden' name='file_id1' value='"+matriksSugHasil[i][0]+"'>");
+                out.println("<input type='hidden' name='file_id2' value='"+matriksSugHasil[i][1]+"'>");
+                out.println("<input type='hidden' name='file_id3' value='"+matriksSugHasil[i][2]+"'>");
+            }
+            out.println("<input type='submit' value='Approve' onclick='return checkExecute();'>");
+
+            out.println("</form>");
+			
+			
+        }
+        else{
+            out.println("<br /> Tidak ada sugesti dari Admin.");
+        }
+    }
+    else{
+        out.println("<br /> Tidak ada data yang bisa dicocokkan (request deposit atau file) silahkan lakukan upload Account Statement <a href='uploadDepositFile.jsp'>disini</a>");
+    }
+}
+catch(Exception e){
+    e.printStackTrace();
+    out.println("<br/ > <b>Basis data error.</b>");
+    try{con.rollback();}catch(Exception ee){}
+}
+finally{
+    try{
+        if(con!=null) con.close();
+        if(rs!=null) rs.close();
+        if(stmt!=null) stmt.close();
+        if(pstmt!=null) pstmt.close();
+    }
+    catch(Exception e){}
+}
+
+%>
+
+	</stripes:layout-component>
+</stripes:layout-render>
+

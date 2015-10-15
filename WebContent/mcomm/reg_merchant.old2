@@ -1,0 +1,132 @@
+<%@ page import="java.sql.*"%>
+<%@ include file="/web-starter/taglibs.jsp"%>
+<%@page import="com.telkomsel.itvas.webstarter.User"%>
+<jsp:useBean id="DbCon" scope="page" class="tsel_tunai.DbCon"></jsp:useBean>
+<script language="JavaScript">
+<!--
+function checkDelete()
+{
+	with(document)
+	{
+		var checkStatus = confirm('Do you really want to delete this member?');
+		if (checkStatus)
+		{
+			checkStatus = true;
+		}
+		return checkStatus;
+	}
+}
+//-->
+</script>
+<%
+	User user = (User)session.getValue("user");
+	
+	String stat = request.getParameter("stat");
+	String msg = request.getParameter("msg");
+	String suc = request.getParameter("suc");
+	
+	if(stat == null)
+		stat = "0";
+	if(msg == null)
+		msg = "";
+	if(suc == null)
+		suc = "";
+	
+	if(!stat.equals("0"))
+	{
+		if(suc.equals("Merchant registration success"))
+			out.println( "<SCRIPT LANGUAGE=javascript> alert('Registrasi merchant berhasil');</SCRIPT>" );
+		else
+			out.println( "<SCRIPT LANGUAGE=javascript> alert('Registrasi merchant gagal, reason : " + suc + "');</SCRIPT>" );
+	}	
+%>
+<stripes:layout-render name="/web-starter/layout/standard.jsp" title="Create Merchant">
+	<stripes:layout-component name="contents">
+		<table width="33%" border="0" cellspacing="0" cellpadding="0">
+		<form name="form" method="post" action="addMerchant2.jsp">
+			<tr bgcolor="#CC6633">
+				<td colspan="2"><div align="center"><font color="#FFFFFF" size="2" face="Verdana, Arial, Helvetica, sans-serif"><strong>Registration</strong></font></div></td>
+			</tr>
+			<tr>
+				<td><font color="#999999" size="1" face="Verdana, Arial, Helvetica, sans-serif"><strong>Name</strong></font></td>
+				<td><input type="text" name="name" width="200"></td>
+			</tr>
+			<tr>
+				<td><font color="#999999" size="1" face="Verdana, Arial, Helvetica, sans-serif"><strong>Key Merchant</strong></font></td>
+				<td><input type="text" name="key_merchant" width="200"></td>
+			</tr>
+			<tr>
+				<td><font color="#999999" size="1" face="Verdana, Arial, Helvetica, sans-serif"><strong>Address</strong></font></td>
+				<td><textarea name="address" cols="15"></textarea></td>
+			</tr>
+			<tr>
+				<td><font color="#999999" size="1" face="Verdana, Arial, Helvetica, sans-serif"><strong>City</strong></font></td>
+				<td><input type="text" name="city" width="200"></td>
+			</tr>
+			<tr>
+				<td><font color="#999999" size="1" face="Verdana, Arial, Helvetica, sans-serif"><strong>Zip Code</strong></font></td>
+				<td><input type="text" name="zipcode" width="200"></td>
+			</tr>
+			<tr>
+				<td><font color="#999999" size="1" face="Verdana, Arial, Helvetica, sans-serif"><strong>Phone Number</strong></font></td>
+				<td><input type="text" name="phonenum" width="200"></td>
+			</tr>
+			<tr>
+				<td><font color="#999999" size="1" face="Verdana, Arial, Helvetica, sans-serif"><strong>MSISDN</strong></font></td>
+				<td><input type="text" name="msisdn" width="200" value="628"></td>
+			</tr>
+			<tr>
+				<td><font color="#999999" size="1" face="Verdana, Arial, Helvetica, sans-serif"><strong>Login</strong></font></td>
+				<td><input type="text" name="login" width="200"></td>
+			</tr>
+			<tr>
+				<td><font color="#999999" size="1" face="Verdana, Arial, Helvetica, sans-serif"><strong>KTP Number</strong></font></td>
+				<td><input type="text" name="ktpno" width="200"></td>
+			</tr>
+			<tr>
+				<td><font color="#999999" size="1" face="Verdana, Arial, Helvetica, sans-serif"><strong>NPWP Number</strong></font></td>
+				<td><input type="text" name="npwp" width="200"></td>
+			</tr>
+			<tr>
+				<td><font color="#999999" size="1" face="Verdana, Arial, Helvetica, sans-serif"><strong>Bank Name</strong></font></td>
+				<td><input type="text" name="bank_name" width="200"></td>
+			</tr>
+			<tr>
+				<td><font color="#999999" size="1" face="Verdana, Arial, Helvetica, sans-serif"><strong>Bank Account Number</strong></font></td>
+				<td><input type="text" name="bank_acc_no" width="200"></td>
+			</tr>
+			<tr>
+				<td><font color="#999999" size="1" face="Verdana, Arial, Helvetica, sans-serif"><strong>Bank Account Holder</strong></font></td>
+				<td><input type="text" name="bank_acc_holder" width="200"></td>
+			</tr>
+			<tr>
+				<td><font color="#999999" size="1" face="Verdana, Arial, Helvetica, sans-serif"><strong>TSEL Bank Account</strong></font></td>
+				<td><input type="text" name="tsel_bank_acc" width="200"></td>
+			</tr>
+			<tr>
+				<td><font color="#999999" size="1" face="Verdana, Arial, Helvetica, sans-serif"><strong>Merchant's Type</strong></font></td>
+		        <td width="100%"> <select name="merchant_type">			  	
+                <option value="deposit">Deposit</option>
+                <option value="daily">Daily</option>
+                </select>
+                </td>
+			</tr>
+			<tr>
+				<td>&nbsp;</td>
+				<td><input type="submit" name="Submit" value="  Add  "></td>
+			</tr>
+		</form>
+		</table>
+		<br>
+		<br>
+		<table width="40%" border="0" cellspacing="0" cellpadding="0">
+			<tr>
+				<td>
+					<div align="center">
+						<font color="#CC6633" size="1" face="Verdana, Arial, Helvetica, sans-serif">Sebelum anda keluar dari layanan ini pastikan anda telah logout agar login anda tidak dapat dipakai oleh orang lain.</font>
+					</div>
+				</td>
+			</tr>
+		</table>
+	</stripes:layout-component>
+</stripes:layout-render>

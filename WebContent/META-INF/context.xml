@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Context>
+
+  <Resource name="jdbc/local" auth="Container" type="javax.sql.DataSource"
+               maxActive="50" maxIdle="30" maxWait="10000"
+               username="titus" password="titus" 
+               driverClassName="oracle.jdbc.driver.OracleDriver"
+               url="jdbc:oracle:thin:@localhost:1521:orcl"/>
+               
+  <Resource name="jdbc/tsel_tunai_dev" auth="Container" type="javax.sql.DataSource"
+               maxActive="50" maxIdle="30" maxWait="10000"
+               username="tunai" password="tunai123" 
+               driverClassName="oracle.jdbc.driver.OracleDriver"
+               url="jdbc:oracle:thin:@10.251.230.214:1521:tcashdb1"/>     
+			   
+  <Resource name="jdbc/tsel_tunai" auth="Container" type="javax.sql.DataSource"
+               maxActive="50" maxIdle="30" maxWait="10000"
+               username="tunai" password="tunai123" 
+               driverClassName="oracle.jdbc.driver.OracleDriver"
+               url="jdbc:oracle:thin:@10.251.230.214:1521:tcashdb1"/>  			   
+
+</Context>

@@ -1,0 +1,344 @@
+<%-- 
+    Document   : cashout_approve
+    Created on : Jun 4, 2010, 8:55:13 AM
+    Author     : madeady
+--%>
+
+<%@page contentType="text/html" pageEncoding="UTF-8"%>
+<%@ page import="java.io.*, java.util.*,java.text.*, oracle.jdbc.driver.*, java.sql.*;" %>
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+   "http://www.w3.org/TR/html4/loose.dtd">
+
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <title>JSP Page</title>
+    </head>
+<script language="JavaScript">
+<!--
+
+function solveThis(xid, print, tdate, cur_page, check0, check1)
+{
+	window.location = "cashout_approve.jsp?xid=" + xid + "&print" + xid + "=" + print + "&tdate=" + tdate + "&cur_page=" + cur_page + "&check0=" + check0 + "&check1=" + check1;
+}
+
+function checkExecute(){
+                with(document)
+                        return confirm("Do you really want to execute all these cashout?");
+}
+//-->
+</script>
+
+    <body>
+<%
+//User user = (User)session.getValue("user");
+String merchant = request.getParameter("merchant");
+String [] view = request.getParameterValues("view");
+String xid = request.getParameter("xid");
+String tdate = request.getParameter("tdate");
+String check0 = request.getParameter("check0");
+String check1 = request.getParameter("check1");
+
+String compare = null;
+
+String query = null;
+Connection conn = null;
+Statement stmt = null;
+PreparedStatement pstmt = null;
+ResultSet rs = null;
+
+NumberFormat nf =  NumberFormat.getInstance(Locale.ITALY);
+SimpleDateFormat sdf = new SimpleDateFormat("d-M-yyyy");
+
+if(merchant == null)
+	merchant = "";
+if(check0 == null)
+	check0 = "checked";
+if(check1 == null)
+	check1 = "checked";
+
+if(view != null)
+{
+	if(view.length == 1)
+	{
+		if(view[0].equals("0"))
+			check1 = "";
+		else
+			check0 = "";
+	}
+}
+
+try
+{
+	Class.forName("oracle.jdbc.OracleDriver");
+        conn = DriverManager.getConnection("jdbc:oracle:thin:@10.2.114.121:1521:OPTUNAI","tunai", "tunai123");
+
+	if(xid != null && !xid.equals(""))
+	{
+		if(tdate != null && !tdate.equals(""))
+		{
+			if(!tdate.equals("this"))
+			{
+				if(sdf.parse(tdate).before(sdf.parse(request.getParameter("print" + xid))) || sdf.parse(tdate).after(new java.util.Date()))
+					out.println("<script language='javascript'>alert('Solve ticket failed, reason: date must be between " + request.getParameter("print" + xid) + " and today')</script>");
+				else
+				{
+					query = "UPDATE merchant_cashout SET is_executed = '2', completion_date = TO_DATE(?, 'DD-MM-YYYY'), executor = ? WHERE cashout_id = ?";
+					pstmt = conn.prepareStatement(query);
+					pstmt.clearParameters();
+					pstmt.setString(1, tdate);
+					pstmt.setString(2, "Finance");
+					pstmt.setString(3, xid);
+					pstmt.executeUpdate();
+					pstmt.close();
+
+					query = "UPDATE settlement_history SET status = '2' WHERE exec_id = ? AND amount > 0";
+					pstmt = conn.prepareStatement(query);
+					pstmt.clearParameters();
+					pstmt.setString(1, xid);
+					pstmt.executeUpdate();
+					pstmt.close();
+
+					out.println("<script language='javascript'>alert('Solve ticket no " + xid + " successful')</script>");
+				}
+			}
+		}
+		else
+			out.println("<script language='javascript'>alert('Solve ticket failed, reason: date cannot null')</script>");
+	}
+%>
+<stripes:layout-render name="/web-starter/layout/standard.jsp" title="Cashout Approval">
+	<stripes:layout-component name="contents">
+		<form name="form" method="post" action="cashout_approve.jsp">
+		<table width="30%" border="0" cellspacing="1" cellpadding="1">
+		<tr bgcolor="#CC6633">
+			<td colspan="2"><div align="center"><font color="#FFFFFF" size="2" face="Verdana, Arial, Helvetica, sans-serif"><strong>Search by Merchant</strong></font></div></td>
+		</tr>
+		<tr>
+			<td><input type="submit" name="Submit" value="View"></td>
+			<td>
+				<select name="merchant">
+					<option value=''></option>
+<%
+	query = "SELECT a.merchant_id, b.name FROM merchant a, merchant_info b WHERE a.merchant_info_id = b.merchant_info_id AND a.status = 'A' ORDER BY a.merchant_id";
+	stmt = conn.createStatement();
+	rs = stmt.executeQuery(query);
+	while(rs.next())
+	{
+		if(rs.getString("merchant_id").equals(merchant))
+			out.println("<option value='" + rs.getString("merchant_id") + "' selected>" + rs.getString("name") + "</option>");
+		else
+			out.println("<option value='" + rs.getString("merchant_id") + "'>" + rs.getString("name") + "</option>");
+	}
+
+	stmt.close();
+	rs.close();
+%>
+				</select>
+			</td>
+		</tr>
+		<tr>
+			<td></td>
+			<td>
+				<input type="checkbox" name="view" value="0" <%= check0%>><font color="#CC6633" size="1" face="Verdana, Arial, Helvetica, sans-serif">Daily</font>&nbsp;
+				<input type="checkbox" name="view" value="1" <%= check1%>><font color="#CC6633" size="1" face="Verdana, Arial, Helvetica, sans-serif">On Demand</font><br>
+			</td>
+		</tr>
+		</table>
+		</form>
+		<br>
+<%
+	int jumlah = 0;
+	int cur_page = 1;
+	int row_per_page = 100;
+
+	if(check0.equals("checked") && check1.equals("checked"))
+		query = "SELECT COUNT(*) AS jml FROM merchant_cashout a WHERE a.is_executed = '1'";
+	else
+	{
+		compare = check0.equals("checked") ? "=" : "!=";
+		query = "SELECT COUNT(*) AS jml FROM merchant_cashout a WHERE a.entry_login " + compare + " 'Daily Settlement' AND a.is_executed = '1'";
+	}
+
+	if(!merchant.equals(""))query += " AND a.merchant_id = ?";
+
+	pstmt = conn.prepareStatement(query);
+	pstmt.clearParameters();
+	if(!merchant.equals(""))
+		pstmt.setString(1, merchant);
+
+	rs = pstmt.executeQuery();
+	if(rs.next())
+		jumlah = rs.getInt("jml");
+
+	pstmt.close();
+	rs.close();
+
+	if(request.getParameter("cur_page") != null && !request.getParameter("cur_page").equals(""))
+		cur_page = Integer.parseInt(request.getParameter("cur_page"));
+
+	int start_row = (cur_page - 1) * row_per_page + 1;
+	int end_row = start_row + row_per_page - 1;
+	int total_page = (jumlah / row_per_page) + 1;
+	if(jumlah % row_per_page == 0)
+		total_page--;
+
+	int minPaging = cur_page - 5;
+	if(minPaging < 1)
+		minPaging = 1;
+
+	int maxPaging = cur_page + 5;
+	if(maxPaging > total_page)
+		maxPaging = total_page;
+
+	out.println("Page : ");
+
+
+
+	if(minPaging - 1 > 0)
+		out.print("<a class='link' href='?cur_page=" + (minPaging - 1) + "&merchant=" + merchant + "&check0=" + check0 + "&check1=" + check1 + "'>&lt;</a>");
+
+	for(int i = minPaging; i <= maxPaging; i++)
+	{
+		if(i == cur_page)
+			out.print(i + " ");
+		else
+			out.print("<a class='link' href='?cur_page=" + i + "&merchant=" + merchant + "&check0=" + check0 + "&check1=" + check1 + "'>" + i + " </a>");
+	}
+
+	if(maxPaging + 1 <= total_page)
+		out.print("<a class='link' href='?cur_page=" + (maxPaging + 1) + "&merchant=" + merchant + "&check0=" + check0 + "&check1=" + check1 + "'>&gt;</a>");
+
+ %>
+
+<%
+//ngecek jumlah yang bisa diapprove, kalau kosong, tombol ini tidak muncul.
+int jml = 0;
+query = "select count(*) as jml from merchant_cashout where is_executed=1 and print_date is null and receipt_id is null";
+pstmt = conn.prepareStatement(query);
+rs = pstmt.executeQuery();
+if(rs.next())jml = rs.getInt("JML");
+pstmt.close();
+rs.close();
+
+if (jml!=0){
+    //String [] arrayID = new String[jml];
+    //ngambil array id untuk dikirimkan ke halaman new_print_receipt
+    query = "select * from merchant_cashout where is_executed=1 and print_date is null and receipt_id is null";
+    pstmt = conn.prepareStatement(query);
+    rs = pstmt.executeQuery();
+%>
+<form action="new_print_receipt.jsp" method="get">
+    <input type="submit" name="method" value="Approve All" onclick="return checkExecute();">
+    <input type="hidden" name="type" value="cashout">
+    <%
+    //int i=0;
+    while(rs.next()){
+        //jml = rs.getInt("jml");
+        out.println("<input type='hidden' name='cashout_id' value='"+rs.getString("cashout_id")+"'>");
+        out.println("<input type='hidden' name='merchant_id' value='"+rs.getString("merchant_id")+"'>");
+    }
+    pstmt.close();
+    rs.close(); 
+    %>
+</form>
+<%
+}
+%>
+		<table width="90%" border="1" cellspacing="0" cellpadding="0" bordercolor="#FFF6EF">
+		<tr>
+			<td colspan="11"><div align="right"><font color="#CC6633" size="2" face="Verdana, Arial, Helvetica, sans-serif"><strong>.:: Cashout List</strong></font></div></td>
+		</tr>
+		<tr>
+			<td bgcolor="#CC6633"><div align="center"><font color="#FFFFFF" size="1" face="Verdana, Arial, Helvetica, sans-serif"><strong>Cashout ID</strong></font></div></td>
+			<td bgcolor="#CC6633"><div align="center"><font color="#FFFFFF" size="1" face="Verdana, Arial, Helvetica, sans-serif"><strong>Cashout Date</strong></font></div></td>
+			<td bgcolor="#CC6633"><div align="center"><font color="#FFFFFF" size="1" face="Verdana, Arial, Helvetica, sans-serif"><strong>Merchant</strong></font></div></td>
+			<td bgcolor="#CC6633"><div align="center"><font color="#FFFFFF" size="1" face="Verdana, Arial, Helvetica, sans-serif"><strong>Amount</strong></font></div></td>
+			<td bgcolor="#CC6633"><div align="center"><font color="#FFFFFF" size="1" face="Verdana, Arial, Helvetica, sans-serif"><strong>Doc Number</strong></font></div></td>
+			<td bgcolor="#CC6633"><div align="center"><font color="#FFFFFF" size="1" face="Verdana, Arial, Helvetica, sans-serif"><strong>Note</strong></font></div></td>
+			<td bgcolor="#CC6633"><div align="center"><font color="#FFFFFF" size="1" face="Verdana, Arial, Helvetica, sans-serif"><strong>Custodian Bank</strong></font></div></td>
+			<td bgcolor="#CC6633"><div align="center"><font color="#FFFFFF" size="1" face="Verdana, Arial, Helvetica, sans-serif"><strong>Bank Account</strong></font></div></td>
+			<td bgcolor="#CC6633"><div align="center"><font color="#FFFFFF" size="1" face="Verdana, Arial, Helvetica, sans-serif"><strong>Receipt</strong></font></div></td>
+		</tr>
+<%
+	if(check0.equals("checked") && check1.equals("checked"))
+		query = "SELECT b.*, c.* FROM merchant_cashout b, merchant_info c, merchant d WHERE b.is_executed = '1' AND b.merchant_id = d.merchant_id AND d.merchant_info_id = c.merchant_info_id";
+	else
+		query = "SELECT b.*, c.* FROM merchant_cashout b, merchant_info c, merchant d WHERE b.entry_login " + compare + " 'Daily Settlement' AND b.is_executed = '1' AND b.merchant_id = d.merchant_id AND d.merchant_info_id = c.merchant_info_id";
+
+	if(!merchant.equals(""))
+		query += " AND b.merchant_id = '" + merchant + "'";
+
+	query += " ORDER BY b.deposit_time DESC";
+	query = "SELECT * FROM (SELECT a.*, ROWNUM rnum FROM (" + query + ") a WHERE ROWNUM <= ?) WHERE rnum >= ?";
+	pstmt = conn.prepareStatement(query);
+	pstmt.clearParameters();
+	pstmt.setInt(1, end_row);
+	pstmt.setInt(2, start_row);
+	rs = pstmt.executeQuery();
+	while(rs.next())
+	{
+		boolean is_receipt = (rs.getString("print_date") == null || rs.getString("print_date").equals("")) && request.getParameter("print" + rs.getString("cashout_id")) == null ? true : false;
+		boolean is_ticket = rs.getString("print_date") != null && !rs.getString("print_date").equals("") ? true : false;
+
+		String amount = rs.getString("amount");
+		String [] _amount = amount.split(",");
+		if(_amount.length > 1)
+			amount = nf.format(Long.parseLong(_amount[0])) + "," + _amount[1];
+		else
+			amount = nf.format(Long.parseLong(_amount[0]));
+%>
+		<tr>
+			<td><div align="center"><font size="1" face="Verdana, Arial, Helvetica, sans-serif"><%= rs.getString("cashout_id")%></font></div></td>
+			<td><div align="center"><font size="1" face="Verdana, Arial, Helvetica, sans-serif"><%= rs.getString("deposit_time")%></font></div></td>
+			<td><div align="center"><font size="1" face="Verdana, Arial, Helvetica, sans-serif"><%= rs.getString("name")%></font></div></td>
+			<td><div align="center"><font size="1" face="Verdana, Arial, Helvetica, sans-serif"><%= amount%></font></div></td>
+			<td><div align="center"><font size="1" face="Verdana, Arial, Helvetica, sans-serif"><%= rs.getString("doc_number")%></font></div></td>
+			<td><div align="center"><font size="1" face="Verdana, Arial, Helvetica, sans-serif"><%= rs.getString("note")%></font></div></td>
+			<td><div align="center"><font size="1" face="Verdana, Arial, Helvetica, sans-serif"><%= rs.getString("bank_name")%></font></div></td>
+			<td><div align="center"><font size="1" face="Verdana, Arial, Helvetica, sans-serif"><%= rs.getString("bank_acc_no")%></font></div></td>
+<%
+		if(is_receipt)
+		{
+%>
+			<td><div align="center"><font size="1" face="Verdana, Arial, Helvetica, sans-serif"><a target="_receiptcashout" href="new_print_receipt.jsp?mid=<%= rs.getString("merchant_id")%>&type=cashout&xid=<%= rs.getString("cashout_id")%>" onclick="solveThis('<%= rs.getString("cashout_id")%>', 'this', 'this', '<%= cur_page%>', '<%= check0%>', '<%= check1%>');">print</a></font></div></td>
+<%
+		}
+		else
+		{
+%>
+			<td><div align="center"><font size="1" face="Verdana, Arial, Helvetica, sans-serif">print</font></div></td>
+<%
+		}
+%>			
+
+		</tr>
+<%
+	}
+
+	pstmt.close();
+	rs.close();
+%>
+		</table>
+	</stripes:layout-component>
+</stripes:layout-render>
+
+<%
+}
+catch(Exception e)
+{
+	e.printStackTrace(System.out);
+}
+finally
+{
+	try
+	{
+		conn.close();
+	}
+	catch(Exception e)
+	{
+	}
+}
+%>
+    </body>
+</html>
