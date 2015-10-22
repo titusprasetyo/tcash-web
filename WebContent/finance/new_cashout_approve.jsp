@@ -280,25 +280,34 @@ try
 //ngecek jumlah yang bisa diapprove, kalau kosong, tombol ini tidak muncul.
 int jml_mandiri = 0;
 int jml_bni = 0;
+int jml_oth = 0;
 
-query = "select count(*) as jml_mandiri from merchant_cashout a, merchant_info b, merchant c where a.MERCHANT_ID = c.MERCHANT_ID and b.MERCHANT_INFO_ID = c.MERCHANT_INFO_ID and (a.is_executed=1) and a.print_date is null and a.receipt_id is null and upper(b.bank_name) like '%ANDIRI'";
+query = "select count(*) as jml_mandiri from merchant_cashout a, merchant_info b, merchant c where a.MERCHANT_ID = c.MERCHANT_ID and b.MERCHANT_INFO_ID = c.MERCHANT_INFO_ID and (a.is_executed=1) and a.print_date is null and a.receipt_id is null and upper(b.bank_name) = 'MANDIRI'";
 pstmt = conn.prepareStatement(query);
 rs = pstmt.executeQuery();
 if(rs.next())jml_mandiri = rs.getInt("jml_mandiri");
 pstmt.close();
 rs.close();
 
-query = "select count(*) as jml_mandiri from merchant_cashout a, merchant_info b, merchant c where a.MERCHANT_ID = c.MERCHANT_ID and b.MERCHANT_INFO_ID = c.MERCHANT_INFO_ID and (a.is_executed=1) and a.print_date is null and a.receipt_id is null and upper(b.bank_name) like '%BNI'";
+query = "select count(*) as jml_mandiri from merchant_cashout a, merchant_info b, merchant c where a.MERCHANT_ID = c.MERCHANT_ID and b.MERCHANT_INFO_ID = c.MERCHANT_INFO_ID and (a.is_executed=1) and a.print_date is null and a.receipt_id is null and upper(b.bank_name) = 'BNI'";
 pstmt = conn.prepareStatement(query);
 rs = pstmt.executeQuery();
 if(rs.next())jml_bni = rs.getInt("jml_mandiri");
 pstmt.close();
 rs.close();
 
+query = "select count(*) as jml_mandiri from merchant_cashout a, merchant_info b, merchant c where a.MERCHANT_ID = c.MERCHANT_ID and b.MERCHANT_INFO_ID = c.MERCHANT_INFO_ID and (a.is_executed=1) and a.print_date is null and a.receipt_id is null and upper(b.bank_name) NOT IN ('BNI','MANDIRI')";
+pstmt = conn.prepareStatement(query);
+rs = pstmt.executeQuery();
+if(rs.next())jml_oth = rs.getInt("jml_mandiri");
+pstmt.close();
+rs.close();
+
+
 if (jml_mandiri!=0 && merchant.equals("")){
     //String [] arrayID = new String[jml_mandiri];
     //ngambil array id untuk dikirimkan ke halaman new_print_receipt
-    query = "select a.* from merchant_cashout a, merchant_info b, merchant c where a.MERCHANT_ID = c.MERCHANT_ID and b.MERCHANT_INFO_ID = c.MERCHANT_INFO_ID and (a.is_executed=1) and a.print_date is null and a.receipt_id is null and upper(b.bank_name) like '%ANDIRI'";
+    query = "select a.* from merchant_cashout a, merchant_info b, merchant c where a.MERCHANT_ID = c.MERCHANT_ID and b.MERCHANT_INFO_ID = c.MERCHANT_INFO_ID and (a.is_executed=1) and a.print_date is null and a.receipt_id is null and upper(b.bank_name) = 'MANDIRI'";
     pstmt = conn.prepareStatement(query);
     rs = pstmt.executeQuery();
 %>
@@ -319,13 +328,35 @@ if (jml_mandiri!=0 && merchant.equals("")){
 }
 if (jml_bni!=0 && merchant.equals("")){
 
-query = "select a.* from merchant_cashout a, merchant_info b, merchant c where a.MERCHANT_ID = c.MERCHANT_ID and b.MERCHANT_INFO_ID = c.MERCHANT_INFO_ID and (a.is_executed=1) and a.print_date is null and a.receipt_id is null and upper(b.bank_name) like '%BNI%'";
+query = "select a.* from merchant_cashout a, merchant_info b, merchant c where a.MERCHANT_ID = c.MERCHANT_ID and b.MERCHANT_INFO_ID = c.MERCHANT_INFO_ID and (a.is_executed=1) and a.print_date is null and a.receipt_id is null and upper(b.bank_name) = 'BNI'";
 pstmt = conn.prepareStatement(query);
 rs = pstmt.executeQuery();
 %>
 <form name="frmBNI" action="new_print_receipt.jsp" method="get">
     <input type="submit" name="method" value=" Approve All(BNI) " onclick="return checkExecute();">
     <input type="hidden" name="type" value="cashout">
+    <%
+    //int i=0;
+    while(rs.next()){
+        out.println("<input type='hidden' name='xID' value='"+rs.getString("cashout_id")+"'>");
+        out.println("<input type='hidden' name='merchant_id' value='"+rs.getString("merchant_id")+"'>");
+    }
+    pstmt.close();
+    rs.close(); 
+    %>
+</form>
+<%
+}
+if (jml_oth!=0 && merchant.equals("")){
+
+query = "select a.* from merchant_cashout a, merchant_info b, merchant c where a.MERCHANT_ID = c.MERCHANT_ID and b.MERCHANT_INFO_ID = c.MERCHANT_INFO_ID and (a.is_executed=1) and a.print_date is null and a.receipt_id is null and upper(b.bank_name) not in ('BNI','MANDIRI')";
+pstmt = conn.prepareStatement(query);
+rs = pstmt.executeQuery();
+%>
+<form name="frmOTH" action="new_print_receipt_oth_bank.jsp" method="get">
+    <input type="submit" name="method" value=" Approve All(OTHER) " onclick="return checkExecute();">
+    <input type="hidden" name="type" value="cashout">
+    <input type="hidden" name="query" value="<%=query%>">
     <%
     //int i=0;
     while(rs.next()){

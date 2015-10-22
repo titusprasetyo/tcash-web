@@ -30,7 +30,7 @@ function changeText(value){
 	document.getElementsByName("tsel_bank_acc")[0].value = "0120883432";
   }
   else{
-	document.getElementsByName("tsel_bank_acc")[0].value = "00";
+	document.getElementsByName("tsel_bank_acc")[0].value = "0120883432";
   }
 }
 //-->

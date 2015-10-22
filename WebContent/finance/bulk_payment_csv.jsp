@@ -1,4 +1,4 @@
-<%@page import="java.io.*, java.util.*, java.text.*, java.sql.*"%>
+<%@page import="java.io.*, java.util.*, java.text.*, java.sql.*, org.apache.commons.lang.*"%>
 <%@ include file="/web-starter/taglibs.jsp"%>
 <%@page import="com.telkomsel.itvas.webstarter.User"%>
 <jsp:useBean id="DbCon" scope="page" class="tsel_tunai.DbCon"></jsp:useBean>
@@ -136,7 +136,7 @@ try{
 					</div></td>
 			</tr>
 			<%
-	pstmt = con.prepareStatement("select b.CASHOUT_ID, b.MERCHANT_ID, b.DEPOSIT_TIME, b.AMOUNT, b.NOTE, b.ENTRY_LOGIN, c.BANK_ACC_NO, c.BANK_ACC_HOLDER, c.TSEL_BANK_ACC, c.BANK_NAME from merchant a, merchant_cashout b, merchant_info c where b.MERCHANT_ID=a.MERCHANT_ID AND a.MERCHANT_INFO_ID=c.MERCHANT_INFO_ID AND b.IS_EXECUTED='1' AND b.PRINT_DATE IS NOT NULL AND (b.PRINT_DATE between to_date('"+time5+" 00:00:00','DD-MM-YYYY HH24:MI:SS') AND sysdate) AND b.COMPLETION_DATE IS NULL AND b.RECEIPT_ID IS NOT NULL AND c.BANK_NAME LIKE 'Mandiri' ORDER BY DEPOSIT_TIME DESC");
+	pstmt = con.prepareStatement("select b.CASHOUT_ID, b.MERCHANT_ID, b.DEPOSIT_TIME, b.AMOUNT, b.NOTE, b.ENTRY_LOGIN, c.BANK_ACC_NO, c.BANK_ACC_HOLDER, c.TSEL_BANK_ACC, c.BANK_NAME from merchant a, merchant_cashout b, merchant_info c where b.MERCHANT_ID=a.MERCHANT_ID AND a.MERCHANT_INFO_ID=c.MERCHANT_INFO_ID AND b.IS_EXECUTED='1' AND b.PRINT_DATE IS NOT NULL AND (b.PRINT_DATE between to_date('"+time5+" 00:00:00','DD-MM-YYYY HH24:MI:SS') AND sysdate) AND b.COMPLETION_DATE IS NULL AND b.RECEIPT_ID IS NOT NULL AND UPPER(c.BANK_NAME) = 'MANDIRI' AND c.BANK_ACC_NO <> '0' ORDER BY DEPOSIT_TIME DESC");
 	rs = pstmt.executeQuery();            
     while(rs.next()){
 		existt = true;
@@ -240,7 +240,7 @@ try{
 					</div></td>
 			</tr>
 			<%
-	pstmt = con.prepareStatement("select b.CASHOUT_ID, b.MERCHANT_ID, b.DEPOSIT_TIME, b.AMOUNT, b.NOTE, b.ENTRY_LOGIN, c.BANK_ACC_NO, c.BANK_ACC_HOLDER, c.TSEL_BANK_ACC, c.BANK_NAME from merchant a, merchant_cashout b, merchant_info c where b.MERCHANT_ID=a.MERCHANT_ID AND a.MERCHANT_INFO_ID=c.MERCHANT_INFO_ID AND b.IS_EXECUTED='1' AND b.PRINT_DATE IS NOT NULL AND (b.PRINT_DATE between to_date('"+time5+" 00:00:00','DD-MM-YYYY HH24:MI:SS') AND sysdate) AND b.COMPLETION_DATE IS NULL AND b.RECEIPT_ID IS NOT NULL AND c.BANK_NAME LIKE '%BNI%' ORDER BY DEPOSIT_TIME DESC");
+	pstmt = con.prepareStatement("select b.CASHOUT_ID, b.MERCHANT_ID, b.DEPOSIT_TIME, b.AMOUNT, b.NOTE, b.ENTRY_LOGIN, c.BANK_ACC_NO, c.BANK_ACC_HOLDER, c.TSEL_BANK_ACC, c.BANK_NAME from merchant a, merchant_cashout b, merchant_info c where b.MERCHANT_ID=a.MERCHANT_ID AND a.MERCHANT_INFO_ID=c.MERCHANT_INFO_ID AND b.IS_EXECUTED='1' AND b.PRINT_DATE IS NOT NULL AND (b.PRINT_DATE between to_date('"+time5+" 00:00:00','DD-MM-YYYY HH24:MI:SS') AND sysdate) AND b.COMPLETION_DATE IS NULL AND b.RECEIPT_ID IS NOT NULL AND UPPER(c.BANK_NAME) = 'BNI' AND c.BANK_ACC_NO <> '0' ORDER BY DEPOSIT_TIME DESC");
 	rs = pstmt.executeQuery();            
     while(rs.next()){
 		existt = true;
@@ -348,7 +348,7 @@ try{
 					</div></td>
 			</tr>
 			<%
-	pstmt = con.prepareStatement("select b.CASHOUT_ID, b.MERCHANT_ID, b.DEPOSIT_TIME, b.AMOUNT, b.NOTE, b.ENTRY_LOGIN, c.BANK_ACC_NO, c.BANK_ACC_HOLDER, c.TSEL_BANK_ACC, c.BANK_NAME from merchant a, merchant_cashout b, merchant_info c where b.MERCHANT_ID=a.MERCHANT_ID AND a.MERCHANT_INFO_ID=c.MERCHANT_INFO_ID AND b.IS_EXECUTED='1' AND b.PRINT_DATE IS NOT NULL AND (b.PRINT_DATE between to_date('"+time5+" 00:00:00','DD-MM-YYYY HH24:MI:SS') AND sysdate) AND b.COMPLETION_DATE IS NULL AND b.RECEIPT_ID IS NOT NULL AND c.BANK_NAME NOT in ('BNI','Mandiri') ORDER BY DEPOSIT_TIME DESC");
+	pstmt = con.prepareStatement("select b.CASHOUT_ID, b.MERCHANT_ID, b.DEPOSIT_TIME, b.AMOUNT, b.NOTE, b.ENTRY_LOGIN, c.BANK_ACC_NO, c.BANK_ACC_HOLDER, c.TSEL_BANK_ACC, c.BANK_NAME from merchant a, merchant_cashout b, merchant_info c where b.MERCHANT_ID=a.MERCHANT_ID AND a.MERCHANT_INFO_ID=c.MERCHANT_INFO_ID AND b.IS_EXECUTED='1' AND b.PRINT_DATE IS NOT NULL AND (b.PRINT_DATE between to_date('"+time5+" 00:00:00','DD-MM-YYYY HH24:MI:SS') AND sysdate) AND b.COMPLETION_DATE IS NULL AND b.RECEIPT_ID IS NOT NULL AND UPPER(c.BANK_NAME) NOT IN ('BNI','MANDIRI') AND c.BANK_ACC_NO <> '0' ORDER BY DEPOSIT_TIME DESC");
 	rs = pstmt.executeQuery();            
     while(rs.next()){
 		existt = true;
@@ -407,7 +407,7 @@ try{
 		String ContentHeaderMarker = "P";
         String DebitAccountNumber = "";
 
-        pstmt = con.prepareStatement("select distinct TSEL_BANK_ACC  from MERCHANT_INFO WHERE BANK_NAME LIKE 'Mandiri'");
+        pstmt = con.prepareStatement("select distinct TSEL_BANK_ACC  from MERCHANT_INFO WHERE UPPER(BANK_NAME) = 'MANDIRI'");
         rs = pstmt.executeQuery();            
         if(rs.next())
 			DebitAccountNumber = rs.getString("TSEL_BANK_ACC");           
@@ -415,7 +415,7 @@ try{
 
         String TransactionInstructionDate = time2;
         
-        pstmt = con.prepareStatement("select count(*) as jml from merchant a, merchant_cashout b, merchant_info c where b.MERCHANT_ID=a.MERCHANT_ID AND a.MERCHANT_INFO_ID=c.MERCHANT_INFO_ID AND b.IS_EXECUTED='1' AND b.PRINT_DATE IS NOT NULL AND (b.PRINT_DATE between to_date('"+time5+" 00:00:00','DD-MM-YYYY HH24:MI:SS') AND sysdate) AND b.COMPLETION_DATE IS NULL AND b.RECEIPT_ID IS NOT NULL AND c.BANK_NAME LIKE 'Mandiri'");
+        pstmt = con.prepareStatement("select count(*) as jml from merchant a, merchant_cashout b, merchant_info c where b.MERCHANT_ID=a.MERCHANT_ID AND a.MERCHANT_INFO_ID=c.MERCHANT_INFO_ID AND b.IS_EXECUTED='1' AND b.PRINT_DATE IS NOT NULL AND (b.PRINT_DATE between to_date('"+time5+" 00:00:00','DD-MM-YYYY HH24:MI:SS') AND sysdate) AND b.COMPLETION_DATE IS NULL AND b.RECEIPT_ID IS NOT NULL AND UPPER(c.BANK_NAME) = 'MANDIRI' AND c.BANK_ACC_NO <> '0' ");
         rs = pstmt.executeQuery();            
         if(rs.next())
             TotalDetailRecords = String.valueOf(rs.getInt("jml"));           
@@ -423,7 +423,7 @@ try{
         
 		//============================
 		if(!TotalDetailRecords.equals("0")){
-			pstmt = con.prepareStatement("select SUM(b.AMOUNT) AS TOTALAMOUNT from merchant a, merchant_cashout b, merchant_info c where b.MERCHANT_ID=a.MERCHANT_ID AND a.MERCHANT_INFO_ID=c.MERCHANT_INFO_ID  AND c.BANK_NAME LIKE 'Mandiri' AND b.PRINT_DATE IS NOT NULL AND (b.PRINT_DATE between to_date('"+time5+" 00:00:00','DD-MM-YYYY HH24:MI:SS') AND sysdate) AND b.COMPLETION_DATE IS NULL AND b.RECEIPT_ID IS NOT NULL AND b.IS_EXECUTED='1'");
+			pstmt = con.prepareStatement("select SUM(b.AMOUNT) AS TOTALAMOUNT from merchant a, merchant_cashout b, merchant_info c where b.MERCHANT_ID=a.MERCHANT_ID AND a.MERCHANT_INFO_ID=c.MERCHANT_INFO_ID  AND UPPER(c.BANK_NAME) = 'MANDIRI' AND b.PRINT_DATE IS NOT NULL AND (b.PRINT_DATE between to_date('"+time5+" 00:00:00','DD-MM-YYYY HH24:MI:SS') AND sysdate) AND b.COMPLETION_DATE IS NULL AND b.RECEIPT_ID IS NOT NULL AND b.IS_EXECUTED='1' AND c.BANK_ACC_NO <> '0' ");
 			rs = pstmt.executeQuery();            
 			if(rs.next())
 					TotalAmount = String.valueOf(rs.getInt("TOTALAMOUNT"));           
@@ -436,7 +436,7 @@ try{
 		String HeaderMarker = "P";
         String RekDebet = "";
         
-		pstmt = con.prepareStatement("select distinct TSEL_BANK_ACC from MERCHANT_INFO WHERE BANK_NAME like '%BNI%'");
+		pstmt = con.prepareStatement("select distinct TSEL_BANK_ACC from MERCHANT_INFO WHERE UPPER(BANK_NAME) = 'BNI'");
         rs = pstmt.executeQuery();
         if(rs.next())
             RekDebet = (rs.getString("TSEL_BANK_ACC")).substring(1);           
@@ -444,7 +444,7 @@ try{
         
         String FileCreationTime = time_bni;
         
-        pstmt = con.prepareStatement("select Count(*) as jml from merchant a, merchant_cashout b, merchant_info c where b.MERCHANT_ID=a.MERCHANT_ID AND a.MERCHANT_INFO_ID=c.MERCHANT_INFO_ID AND b.IS_EXECUTED='1' AND b.PRINT_DATE IS NOT NULL  AND (b.PRINT_DATE between to_date('"+time5+" 00:00:00','DD-MM-YYYY HH24:MI:SS') AND sysdate) AND b.COMPLETION_DATE IS NULL AND b.RECEIPT_ID IS NOT NULL AND c.BANK_NAME LIKE '%BNI%' ORDER BY DEPOSIT_TIME DESC");
+        pstmt = con.prepareStatement("select Count(*) as jml from merchant a, merchant_cashout b, merchant_info c where b.MERCHANT_ID=a.MERCHANT_ID AND a.MERCHANT_INFO_ID=c.MERCHANT_INFO_ID AND b.IS_EXECUTED='1' AND b.PRINT_DATE IS NOT NULL  AND (b.PRINT_DATE between to_date('"+time5+" 00:00:00','DD-MM-YYYY HH24:MI:SS') AND sysdate) AND b.COMPLETION_DATE IS NULL AND b.RECEIPT_ID IS NOT NULL AND UPPER(c.BANK_NAME) = 'BNI' AND c.BANK_ACC_NO <> '0' ORDER BY DEPOSIT_TIME DESC");
         rs = pstmt.executeQuery();            
         if(rs.next())
 			TotalData = String.valueOf(rs.getInt("jml"));          
@@ -455,7 +455,7 @@ try{
 			JumlahBaris = String.valueOf(2+Integer.valueOf(TotalData));
 			TanggalTransaksi = time2;
 
-			pstmt = con.prepareStatement("select SUM(b.AMOUNT) AS TOTALAMOUNT from merchant a, merchant_cashout b, merchant_info c where b.MERCHANT_ID=a.MERCHANT_ID AND a.MERCHANT_INFO_ID=c.MERCHANT_INFO_ID  AND c.BANK_NAME LIKE '%BNI%' AND b.IS_EXECUTED='1' AND b.PRINT_DATE IS NOT NULL AND (b.PRINT_DATE between to_date('"+time5+" 00:00:00','DD-MM-YYYY HH24:MI:SS') AND sysdate) AND b.COMPLETION_DATE IS NULL AND b.RECEIPT_ID IS NOT NULL");
+			pstmt = con.prepareStatement("select SUM(b.AMOUNT) AS TOTALAMOUNT from merchant a, merchant_cashout b, merchant_info c where b.MERCHANT_ID=a.MERCHANT_ID AND a.MERCHANT_INFO_ID=c.MERCHANT_INFO_ID  AND UPPER(c.BANK_NAME) = 'BNI' AND b.IS_EXECUTED='1' AND b.PRINT_DATE IS NOT NULL AND (b.PRINT_DATE between to_date('"+time5+" 00:00:00','DD-MM-YYYY HH24:MI:SS') AND sysdate) AND b.COMPLETION_DATE IS NULL AND b.RECEIPT_ID IS NOT NULL AND c.BANK_ACC_NO <> '0' ");
 			rs = pstmt.executeQuery();
 			if(rs.next())
 				TotalNominal = String.valueOf(rs.getInt("TOTALAMOUNT"));
@@ -474,15 +474,15 @@ try{
 		String HeaderMarkerOthBank = "P";
         String RekDebetOthBank = "";
         
-		pstmt = con.prepareStatement("select distinct TSEL_BANK_ACC from MERCHANT_INFO WHERE BANK_NAME NOT IN ('BNI','Mandiri')");
+		pstmt = con.prepareStatement("select distinct TSEL_BANK_ACC from MERCHANT_INFO WHERE UPPER(BANK_NAME) NOT IN ('BNI','MANDIRI')");
         rs = pstmt.executeQuery();
         if(rs.next())
-            RekDebet = "0120883432";//(rs.getString("TSEL_BANK_ACC")).substring(1);           
+        	RekDebetOthBank = "0120883432";//(rs.getString("TSEL_BANK_ACC")).substring(1);           
         pstmt.close();rs.close();
         
         String FileCreationTimeOthBank = time_bni;
         
-        pstmt = con.prepareStatement("select Count(*) as jml from merchant a, merchant_cashout b, merchant_info c where b.MERCHANT_ID=a.MERCHANT_ID AND a.MERCHANT_INFO_ID=c.MERCHANT_INFO_ID AND b.IS_EXECUTED='1' AND b.PRINT_DATE IS NOT NULL  AND (b.PRINT_DATE between to_date('"+time5+" 00:00:00','DD-MM-YYYY HH24:MI:SS') AND sysdate) AND b.COMPLETION_DATE IS NULL AND b.RECEIPT_ID IS NOT NULL AND c.BANK_NAME NOT IN ('BNI','Mandiri') ORDER BY DEPOSIT_TIME DESC");
+        pstmt = con.prepareStatement("select Count(*) as jml from merchant a, merchant_cashout b, merchant_info c where b.MERCHANT_ID=a.MERCHANT_ID AND a.MERCHANT_INFO_ID=c.MERCHANT_INFO_ID AND b.IS_EXECUTED='1' AND b.PRINT_DATE IS NOT NULL  AND (b.PRINT_DATE between to_date('"+time5+" 00:00:00','DD-MM-YYYY HH24:MI:SS') AND sysdate) AND b.COMPLETION_DATE IS NULL AND b.RECEIPT_ID IS NOT NULL AND UPPER(c.BANK_NAME) NOT IN ('BNI','MANDIRI') AND c.BANK_ACC_NO <> '0' ORDER BY DEPOSIT_TIME DESC");
         rs = pstmt.executeQuery();            
         if(rs.next())
 			TotalDataOthBank = String.valueOf(rs.getInt("jml"));          
@@ -492,7 +492,7 @@ try{
 			JumlahBarisOthBank = String.valueOf(2+Integer.valueOf(TotalDataOthBank));
 			TanggalTransaksiOthBank = time2;
 
-			pstmt = con.prepareStatement("select SUM(b.AMOUNT) AS TOTALAMOUNT from merchant a, merchant_cashout b, merchant_info c where b.MERCHANT_ID=a.MERCHANT_ID AND a.MERCHANT_INFO_ID=c.MERCHANT_INFO_ID  AND c.BANK_NAME NOT IN ('BNI','Mandiri') AND b.IS_EXECUTED='1' AND b.PRINT_DATE IS NOT NULL AND (b.PRINT_DATE between to_date('"+time5+" 00:00:00','DD-MM-YYYY HH24:MI:SS') AND sysdate) AND b.COMPLETION_DATE IS NULL AND b.RECEIPT_ID IS NOT NULL");
+			pstmt = con.prepareStatement("select SUM(b.AMOUNT) AS TOTALAMOUNT from merchant a, merchant_cashout b, merchant_info c where b.MERCHANT_ID=a.MERCHANT_ID AND a.MERCHANT_INFO_ID=c.MERCHANT_INFO_ID  AND UPPER(c.BANK_NAME) NOT IN ('BNI','MANDIRI') AND b.IS_EXECUTED='1' AND b.PRINT_DATE IS NOT NULL AND (b.PRINT_DATE between to_date('"+time5+" 00:00:00','DD-MM-YYYY HH24:MI:SS') AND sysdate) AND b.COMPLETION_DATE IS NULL AND b.RECEIPT_ID IS NOT NULL AND c.BANK_ACC_NO <> '0' ");
 			rs = pstmt.executeQuery();
 			if(rs.next())
 				TotalNominalOthBank = String.valueOf(rs.getInt("TOTALAMOUNT"));
@@ -506,7 +506,7 @@ try{
 			// SAVE Mandiri CSV
 			String content = "";
 			
-			pstmt = con.prepareStatement("select to_char(b.PRINT_DATE, 'YYYY') as THN, to_char(b.PRINT_DATE, 'MM') as MNT, b.RECEIPT_ID,b.CASHOUT_ID, b.MERCHANT_ID, b.DEPOSIT_TIME, b.AMOUNT, b.NOTE, b.ENTRY_LOGIN, c.BANK_ACC_NO, c.BANK_ACC_HOLDER, c.TSEL_BANK_ACC, c.BANK_NAME from merchant a, merchant_cashout b, merchant_info c where b.MERCHANT_ID=a.MERCHANT_ID AND a.MERCHANT_INFO_ID=c.MERCHANT_INFO_ID AND b.IS_EXECUTED='1' AND b.PRINT_DATE IS NOT NULL AND (b.PRINT_DATE between to_date('"+time5+" 00:00:00','DD-MM-YYYY HH24:MI:SS') AND sysdate) AND b.COMPLETION_DATE IS NULL AND b.RECEIPT_ID IS NOT NULL AND c.BANK_NAME LIKE 'Mandiri' ORDER BY DEPOSIT_TIME DESC");
+			pstmt = con.prepareStatement("select to_char(b.PRINT_DATE, 'YYYY') as THN, to_char(b.PRINT_DATE, 'MM') as MNT, b.RECEIPT_ID,b.CASHOUT_ID, b.MERCHANT_ID, b.DEPOSIT_TIME, b.AMOUNT, b.NOTE, b.ENTRY_LOGIN, c.BANK_ACC_NO, c.BANK_ACC_HOLDER, c.TSEL_BANK_ACC, c.BANK_NAME from merchant a, merchant_cashout b, merchant_info c where b.MERCHANT_ID=a.MERCHANT_ID AND a.MERCHANT_INFO_ID=c.MERCHANT_INFO_ID AND b.IS_EXECUTED='1' AND b.PRINT_DATE IS NOT NULL AND (b.PRINT_DATE between to_date('"+time5+" 00:00:00','DD-MM-YYYY HH24:MI:SS') AND sysdate) AND b.COMPLETION_DATE IS NULL AND b.RECEIPT_ID IS NOT NULL AND UPPER(c.BANK_NAME) = 'MANDIRI' AND c.BANK_ACC_NO <> '0' ORDER BY DEPOSIT_TIME DESC");
 			rs = pstmt.executeQuery();            
 			con.setAutoCommit(false);
 			while(rs.next()){
@@ -516,15 +516,16 @@ try{
 				content+= rs.getString("AMOUNT")+",";
 				// naruh remark disini, maksimum karakter 20 karakter
 				// check for daily settlement format
+				// tambah receipt_id no perintah bayar
 				content+= _month[rs.getInt("MNT")-1]+"/"+rs.getString("THN")+",";
 				outPUT+=(rs.getString("CASHOUT_ID")+"|");
 				if(rs.getString("NOTE").equals("Daily Settlement"))
-					content+=rs.getString("CASHOUT_ID")+ " " + "DS_" + time4+ ",";
+					content+=StringUtils.left(("C"+rs.getString("CASHOUT_ID")+" P"+rs.getString("RECEIPT_ID") +" " + "" + time4),19)+ ",";
 				else
-					content+=rs.getString("CASHOUT_ID")+ " " +(((rs.getString("NOTE")).length()<13 )? rs.getString("NOTE") : (rs.getString("NOTE")).substring(0,13))+",";
+					content+=StringUtils.left(("C"+rs.getString("CASHOUT_ID")+" P"+rs.getString("RECEIPT_ID") +" " +(((rs.getString("NOTE")).length()<13 )? rs.getString("NOTE") : (rs.getString("NOTE")).substring(0,13))),19)+",";
 				content+="IBU,,,";
 				content+=",,,,Y";
-				content+=",lisa_rahmawati@telkomsel.co.id,,,,,,,,,,,,,,,,,,,,,,,extended detail will be sent\n";
+				content+=",nuke_kusumayanti@telkomsel.co.id,,,,,,,,,,,,,,,,,,,,,,,extended detail will be sent\n";
 				
 				//update is_executed=3
 				pstmt2 = con.prepareStatement("UPDATE merchant_cashout SET is_executed = '3' WHERE cashout_id = '"+rs.getString("CASHOUT_ID")+"'");
@@ -568,7 +569,7 @@ try{
 			// SAVE BNI CSV
 			String content2 = "";
 
-			pstmt = con.prepareStatement("select b.CASHOUT_ID, b.MERCHANT_ID, b.DEPOSIT_TIME, b.AMOUNT, b.NOTE, b.ENTRY_LOGIN, c.BANK_ACC_NO, c.BANK_ACC_HOLDER, c.TSEL_BANK_ACC, c.BANK_NAME from merchant a, merchant_cashout b, merchant_info c where b.MERCHANT_ID=a.MERCHANT_ID AND a.MERCHANT_INFO_ID=c.MERCHANT_INFO_ID AND b.IS_EXECUTED='1' AND b.PRINT_DATE IS NOT NULL AND (b.PRINT_DATE between to_date('"+time5+" 00:00:00','DD-MM-YYYY HH24:MI:SS') AND sysdate) AND b.COMPLETION_DATE IS NULL AND b.RECEIPT_ID IS NOT NULL AND c.BANK_NAME LIKE '%BNI%' ORDER BY DEPOSIT_TIME DESC");
+			pstmt = con.prepareStatement("select b.CASHOUT_ID, b.RECEIPT_ID, b.MERCHANT_ID, b.DEPOSIT_TIME, b.AMOUNT, b.NOTE, b.ENTRY_LOGIN, c.BANK_ACC_NO, c.BANK_ACC_HOLDER, c.TSEL_BANK_ACC, c.BANK_NAME from merchant a, merchant_cashout b, merchant_info c where b.MERCHANT_ID=a.MERCHANT_ID AND a.MERCHANT_INFO_ID=c.MERCHANT_INFO_ID AND b.IS_EXECUTED='1' AND b.PRINT_DATE IS NOT NULL AND (b.PRINT_DATE between to_date('"+time5+" 00:00:00','DD-MM-YYYY HH24:MI:SS') AND sysdate) AND b.COMPLETION_DATE IS NULL AND b.RECEIPT_ID IS NOT NULL AND UPPER(c.BANK_NAME) = 'BNI' AND c.BANK_ACC_NO <> '0' ORDER BY DEPOSIT_TIME DESC");
 			rs = pstmt.executeQuery();
 			
 			con.setAutoCommit(false);
@@ -580,9 +581,9 @@ try{
 				
 				//Disini naruh remarknya, ada 3 remark dengan masing2 remark maximum 33 karakter
 				if(rs.getString("NOTE").equals("Daily Settlement"))
-					content2+= rs.getString("CASHOUT_ID") + " " + "DS_" + time4 + ",";
+					content2+= StringUtils.left(("C"+rs.getString("CASHOUT_ID") +" P"+ rs.getString("RECEIPT_ID") + " " + "DS_" + time4),33) + ",";
 				else
-					content2+= rs.getString("CASHOUT_ID") + " " + rs.getString("NOTE") + ",";
+					content2+= StringUtils.left(("C"+rs.getString("CASHOUT_ID") +" P"+ rs.getString("RECEIPT_ID") + " " + rs.getString("NOTE")),33) + ",";
 				
 				outPUT+=(rs.getString("CASHOUT_ID")+"|");				
 				content2+=",,,,,,,,,,,,N,,,N\n";
@@ -634,103 +635,8 @@ try{
 			String contentOthBank = "";
 			String bankName = "";
 			String kodeBank = "";
-			/*
-			Map mapBank = new HashMap<String,String>();
 			
-			mapBank.put("BNI Syariah","0090010");
-			mapBank.put("Artha Graha Internasional","0370028");
-			mapBank.put("Bank Aceh","1160017");
-			mapBank.put("BANK AGRIS","9450305");
-			mapBank.put("BANK ANDA","088");
-			mapBank.put("BANK ANZ","0610306");
-			mapBank.put("Bank Artos Indonesia","5420012");
-			mapBank.put("BANK BCA SYARIAH","5360017");
-			mapBank.put("Bank Bengkulu","1330012");
-			mapBank.put("Bank BJB","4250018");
-			mapBank.put("Bank BPD DIY","1120015");
-			mapBank.put("Bank BPD Kaltim","1220012");
-			mapBank.put("Bank BPD Sulteng","1350018");
-			mapBank.put("Bank BRI Agro","4940014");
-			mapBank.put("Bank BTN","2000150");
-			mapBank.put("Bank BTPN","2130017");
-			mapBank.put("Bank Bukopin","4410010");
-			mapBank.put("BANK BUMI ARTA","0760010");
-			mapBank.put("Bank Capital","0540308");
-			mapBank.put("BANK CENTRAL ASIA","0140397");
-			mapBank.put("BANK CHINATRUST","9490307");
-			mapBank.put("Bank Commonwealth","9500307");
-			mapBank.put("Bank Danamon","0110042");
-			mapBank.put("Bank DKI","1110012");
-			mapBank.put("Bank Ekonomi Raharja","0870010");
-			mapBank.put("Bank Ganesha","1610017");
-			mapBank.put("Bank ICB Bumiputera","4850010");
-			mapBank.put("Bank Ina Perdana","5130014");
-			mapBank.put("Bank Index Selindo","5550018");
-			mapBank.put("Bank Jabar Banten Syariah","4250018");
-			mapBank.put("Bank Jambi","1150014");
-			mapBank.put("BANK JASA JAKARTA","4720014");
-			mapBank.put("Bank Jateng","1130348");
-			mapBank.put("Bank Jatim","1140011");
-			mapBank.put("Bank Kalbar","1230015");
-			mapBank.put("Bank Kalsel","1220012");
-			mapBank.put("Bank Kalteng","1250011");
-			mapBank.put("Bank Kesejahteraan Ekonomi","5350014");
-			mapBank.put("Bank Lampung","1210051");
-			mapBank.put("Bank Maluku","1310016");
-			mapBank.put("BANK MASPION","1570021");
-			mapBank.put("Bank Mayapada Internasional","0970017");
-			mapBank.put("Bank Mayora","5530012");
-			mapBank.put("Bank Mega","4260121");
-			mapBank.put("Bank Mega Syariah","5060016");
-			mapBank.put("Bank Mestika Dharma","1510049");
-			mapBank.put("Bank Muamalat","1470011");
-			mapBank.put("Bank Muamalat Indonesia Syariah","1470011");
-			mapBank.put("BANK MUTIARA","0950011");
-			mapBank.put("Bank Nagari","1180259");
-			mapBank.put("Bank NTB","1280010");
-			mapBank.put("Bank NTT","1300013");
-			mapBank.put("Bank Nusantara Parahyangan","1450015");
-			mapBank.put("Bank OCBC NISP","0280024");
-			mapBank.put("Bank of China","0690300");
-			mapBank.put("Bank of India Indonesia","146");
-			mapBank.put("Bank Papua","1320019");
-			mapBank.put("BANK PUNDI INDONESIA","5580017");
-			mapBank.put("Bank QNB Kesawan","1670015");
-			mapBank.put("BANK RABOBANK","0890016");
-			mapBank.put("BANK RAKYAT INDONESIA","0020307");
-			mapBank.put("BANK RIAU","1190016");
-			mapBank.put("BANK ROYAL INDONESIA","5010011");
-			mapBank.put("BANK SAHABAT SAMPOERNA","523");
-			mapBank.put("Bank Saudara","212");
-			mapBank.put("BANK SBI INDONESIA","4980016");
-			mapBank.put("Bank Sinarmas","1530016");
-			mapBank.put("Bank Sulselbar","126");
-			mapBank.put("Bank Sultra","1350018");
-			mapBank.put("Bank Sulut","1270017");
-			mapBank.put("Bank Sumsel Babel","1200142");
-			mapBank.put("Bank Sumut","1170010");
-			mapBank.put("Bank Syariah Mandiri","4510017");
-			mapBank.put("BANK UOB INDONESIA","0230016");
-			mapBank.put("BANK VICTORIA","5660018");
-			mapBank.put("BANK WINDU KENCANA","0360300");
-			mapBank.put("Bank Woori Indonesia ","0680307");
-			mapBank.put("BII Maybank","0160131");
-			mapBank.put("BPD Bali","1290013");
-			mapBank.put("BPR Eka Bumi Artha","076");
-			mapBank.put("BPR Karyajatnika Sadaya","668");
-			mapBank.put("BRI Syariah","4220051");
-			mapBank.put("CIMB Niaga","0220026");
-			mapBank.put("Citibank","0310305");
-			mapBank.put("DBS INDONESIA","0460307");
-			mapBank.put("Hana Bank","4840017");
-			mapBank.put("Harda","5670011");
-			mapBank.put("HSBC","0410302");
-			mapBank.put("Nobu Bank","5030017");
-			mapBank.put("Panin Bank","019");
-			mapBank.put("Permata Bank","0130475");
-			mapBank.put("Standard Chartered Bank Indonesia","0500306");
-			*/
-			pstmt = con.prepareStatement("select b.CASHOUT_ID, b.MERCHANT_ID, b.DEPOSIT_TIME, b.AMOUNT, b.NOTE, b.ENTRY_LOGIN, c.BANK_ACC_NO, c.BANK_ACC_HOLDER, c.TSEL_BANK_ACC, c.BANK_NAME from merchant a, merchant_cashout b, merchant_info c where b.MERCHANT_ID=a.MERCHANT_ID AND a.MERCHANT_INFO_ID=c.MERCHANT_INFO_ID AND b.IS_EXECUTED='1' AND b.PRINT_DATE IS NOT NULL AND (b.PRINT_DATE between to_date('"+time5+" 00:00:00','DD-MM-YYYY HH24:MI:SS') AND sysdate) AND b.COMPLETION_DATE IS NULL AND b.RECEIPT_ID IS NOT NULL AND c.BANK_NAME NOT IN ('BNI','Mandiri') ORDER BY DEPOSIT_TIME DESC");
+			pstmt = con.prepareStatement("select b.CASHOUT_ID, b.RECEIPT_ID, b.MERCHANT_ID, b.DEPOSIT_TIME, b.AMOUNT, b.NOTE, b.ENTRY_LOGIN, c.BANK_ACC_NO, c.BANK_ACC_HOLDER, c.TSEL_BANK_ACC, c.BANK_NAME from merchant a, merchant_cashout b, merchant_info c where b.MERCHANT_ID=a.MERCHANT_ID AND a.MERCHANT_INFO_ID=c.MERCHANT_INFO_ID AND b.IS_EXECUTED='1' AND b.PRINT_DATE IS NOT NULL AND (b.PRINT_DATE between to_date('"+time5+" 00:00:00','DD-MM-YYYY HH24:MI:SS') AND sysdate) AND b.COMPLETION_DATE IS NULL AND b.RECEIPT_ID IS NOT NULL AND UPPER(c.BANK_NAME) NOT IN ('BNI','MANDIRI') AND c.BANK_ACC_NO <> '0' ORDER BY DEPOSIT_TIME DESC");
 			rs = pstmt.executeQuery();
 			
 			con.setAutoCommit(false);
@@ -749,9 +655,9 @@ try{
 				
 				//Disini naruh remarknya, ada 3 remark dengan masing2 remark maximum 33 karakter
 				if(rs.getString("NOTE").equals("Daily Settlement"))
-					contentOthBank+= rs.getString("CASHOUT_ID") + " " + "DS_" + time4 + ",";
+					contentOthBank+= StringUtils.left(("C"+rs.getString("CASHOUT_ID") +" P"+ rs.getString("RECEIPT_ID") + " " + "DS_" + time4),33) + ",";
 				else
-					contentOthBank+= rs.getString("CASHOUT_ID") + " " + rs.getString("NOTE") + ",";
+					contentOthBank+= StringUtils.left(("C"+rs.getString("CASHOUT_ID") +" P"+ rs.getString("RECEIPT_ID") + " " + rs.getString("NOTE")),33) + ",";
 				
 				outPUT+=(rs.getString("CASHOUT_ID")+"|");				
 				contentOthBank+=",,"+kodeBank+","+bankName+",,,,,,,,,N,,,N\n";

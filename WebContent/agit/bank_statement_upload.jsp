@@ -8,11 +8,21 @@
 <title>Bank Statement Upload</title>
 <script type="text/javascript">
 	function Checkfiles(f) {
+		var alerts = "";
+		var filename = f['file'].value.replace(/^.*[\\\/]/, '')
 		f = f.elements;
-		if (/.*\.(txt)|(csv)$/.test(f['file'].value
-				.toLowerCase()))
+		if (/.*\.(txt)|(csv)$/.test(f['file'].value.toLowerCase()))
+			alerts = "";
+		else
+			alerts += "Please Upload txt/csv Files Only.\n";
+		if ((filename.toLowerCase().indexOf('bni_rk_') == 0)
+				|| (filename.toLowerCase().indexOf('bmr_rk_') == 0))
+			alerts = "";
+		else
+			alerts += "Filename must start with bni_rk_ for BNI dan bmr_rk_ for Mandiri ";
+		if (alerts == "")
 			return true;
-		alert('Please Upload txt/csv Files Only.');
+		alert(alerts);
 		f['file'].focus();
 		return false;
 	};
@@ -75,8 +85,8 @@
 						<input type="file" name="file" id="file" /> <input type="submit"
 							value="upload" />
 					</form>
-					<br /> <br /> <a href="./bank_statement_reconcile.jsp">Back to
-						Bank Statement Reconcile</a>
+					<br /> <br /> <a href="./bank_statement_reconcile.jsp">Back
+						to Bank Statement Reconcile</a>
 				</div> <br /> <br />
 				<table width="40%" border="0" cellspacing="0" cellpadding="0">
 					<tr>

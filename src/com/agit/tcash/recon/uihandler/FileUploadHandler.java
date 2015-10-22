@@ -12,7 +12,6 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.Part;
 
 import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.fileupload.disk.DiskFileItemFactory;
@@ -106,17 +105,6 @@ public class FileUploadHandler extends HttpServlet {
 
 	}
 
-	private String getFileName(final Part part) {
-		final String partHeader = part.getHeader("content-disposition");
-		System.out.println("partHeader : " + partHeader);
-		// LOGGER.log(Level.INFO, "Part Header = {0}", partHeader);
-		for (String content : part.getHeader("content-disposition").split(";")) {
-			if (content.trim().startsWith("filename")) {
-				return content.substring(content.indexOf('=') + 1).trim().replace("\"", "");
-			}
-		}
-		return null;
-	}
 
 	private void save(String filename, String uploadedBy) {
 		// message += "Start reading file from " +

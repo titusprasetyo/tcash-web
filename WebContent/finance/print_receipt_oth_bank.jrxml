@@ -1,0 +1,392 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 6.1.1.final using JasperReports Library version 6.1.1  -->
+<!-- 2015-10-22T14:24:54 -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="print_receipt_oth_bank" pageWidth="842" pageHeight="595" orientation="Landscape" columnWidth="802" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="26013e8b-db30-4b37-80df-2d4398272265">
+	<property name="com.jaspersoft.studio.data.sql.tables" value=""/>
+	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="TCASHDB_DEV"/>
+	<queryString>
+		<![CDATA[select 
+*
+from
+(
+select '1' as section_print, a.*,b.* from merchant_cashout a, merchant_info b, merchant c where a.MERCHANT_ID = c.MERCHANT_ID and b.MERCHANT_INFO_ID = c.MERCHANT_INFO_ID and (a.is_executed=1) and to_date(a.print_date) = to_date(sysdate) and a.receipt_id is not null and upper(b.bank_name) not in ('BNI','MANDIRI')
+union all
+select '2' as section_print, a.*,b.* from merchant_cashout a, merchant_info b, merchant c where a.MERCHANT_ID = c.MERCHANT_ID and b.MERCHANT_INFO_ID = c.MERCHANT_INFO_ID and (a.is_executed=1) and to_date(a.print_date) = to_date(sysdate) and a.receipt_id is not null and upper(b.bank_name) not in ('BNI','MANDIRI')
+)x
+order by x.section_print]]>
+	</queryString>
+	<field name="SECTION_PRINT" class="java.lang.String"/>
+	<field name="CASHOUT_ID" class="java.lang.String"/>
+	<field name="MERCHANT_ID" class="java.lang.String"/>
+	<field name="AMOUNT" class="java.math.BigDecimal"/>
+	<field name="DOC_NUMBER" class="java.lang.String"/>
+	<field name="NOTE" class="java.lang.String"/>
+	<field name="DEPOSIT_TIME" class="java.sql.Timestamp"/>
+	<field name="IS_EXECUTED" class="java.lang.String"/>
+	<field name="ENTRY_LOGIN" class="java.lang.String"/>
+	<field name="EXEC_TIME" class="java.sql.Timestamp"/>
+	<field name="SEQ" class="java.math.BigDecimal"/>
+	<field name="PRINT_DATE" class="java.sql.Timestamp"/>
+	<field name="COMPLETION_DATE" class="java.sql.Timestamp"/>
+	<field name="EXECUTOR" class="java.lang.String"/>
+	<field name="RECEIPT_ID" class="java.lang.String"/>
+	<field name="MERCHANT_INFO_ID" class="java.lang.String"/>
+	<field name="NAME" class="java.lang.String"/>
+	<field name="ADDRESS" class="java.lang.String"/>
+	<field name="CITY" class="java.lang.String"/>
+	<field name="ZIPCODE" class="java.lang.String"/>
+	<field name="PHONE_NUM" class="java.lang.String"/>
+	<field name="MSISDN" class="java.lang.String"/>
+	<field name="KTP_NO" class="java.lang.String"/>
+	<field name="CREATE_TIME" class="java.sql.Timestamp"/>
+	<field name="NPWP" class="java.lang.String"/>
+	<field name="BANK_NAME" class="java.lang.String"/>
+	<field name="BANK_ACC_NO" class="java.lang.String"/>
+	<field name="BANK_ACC_HOLDER" class="java.lang.String"/>
+	<field name="TSEL_BANK_ACC" class="java.lang.String"/>
+	<variable name="v_total_cashout" class="java.math.BigDecimal" calculation="Sum">
+		<variableExpression><![CDATA[$F{AMOUNT}]]></variableExpression>
+	</variable>
+	<variable name="v_no_perintah_bayar" class="java.lang.String">
+		<variableExpression><![CDATA["No : " + ($F{RECEIPT_ID}!=null?$F{RECEIPT_ID}:0) + "/TSEL/TCASH-OUT/"+MONTH(java.util.Calendar.getInstance().getTime() )+"/"+YEAR(java.util.Calendar.getInstance().getTime() )]]></variableExpression>
+	</variable>
+	<variable name="v_header_perintah_bayar" class="java.lang.String">
+		<variableExpression><![CDATA["Sudah dibayarkan ke \t: "+$F{NAME}+"\n" +
+"Alamat \t\t\t: "+$F{ADDRESS}+"\n" +
+"NPWP \t\t\t: "+($F{NPWP}!="null"?$F{NPWP}:"-")+"\n" +
+"Bank \t\t\t: "+$F{BANK_NAME}+"\n" +
+"No Rekening \t\t: "+$F{BANK_ACC_NO}+"\n" +
+"Pemegang Rekening \t: "+$F{BANK_ACC_HOLDER} +"\n\n" +
+"Untuk Pembayaran dengan rincian : "]]></variableExpression>
+	</variable>
+	<title>
+		<band height="138">
+			<staticText>
+				<reportElement x="280" y="40" width="229" height="23" uuid="9be0de68-d3e3-4aa8-996d-c35817d968b9"/>
+				<textElement textAlignment="Center">
+					<font fontName="Arial" size="12" isBold="true" isUnderline="true"/>
+				</textElement>
+				<text><![CDATA[SUMMARY CASHOUT TCASH]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="340" y="78" width="460" height="56" uuid="3bf301c7-372d-4e9f-99d6-33c6ce87af92"/>
+				<textElement textAlignment="Right">
+					<font fontName="Arial" isBold="true"/>
+				</textElement>
+				<text><![CDATA[PT. TELEKOMUNIKASI SELULAR
+Wisma Mulia
+Jl. Gatot Subroto KAV 42 Jakarta Selatan 12710
+NPWP/PKP: 01.718.327.8.091.00]]></text>
+			</staticText>
+		</band>
+	</title>
+	<columnHeader>
+		<band height="20" splitType="Stretch">
+			<printWhenExpression><![CDATA["1".equalsIgnoreCase($F{SECTION_PRINT})]]></printWhenExpression>
+			<staticText>
+				<reportElement x="0" y="0" width="70" height="20" forecolor="#000000" backcolor="#FFFFFF" uuid="3102d39b-c250-4f5d-a37f-703ceb884aca"/>
+				<box>
+					<topPen lineWidth="1.0"/>
+					<leftPen lineWidth="1.0"/>
+					<bottomPen lineWidth="1.0"/>
+					<rightPen lineWidth="1.0"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[TANGGAL]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="70" y="0" width="140" height="20" uuid="b76a676b-be02-416f-89db-dbf6be745d88"/>
+				<box>
+					<topPen lineWidth="1.0"/>
+					<leftPen lineWidth="1.0"/>
+					<bottomPen lineWidth="1.0"/>
+					<rightPen lineWidth="1.0"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[MERCHANT]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="210" y="0" width="110" height="20" uuid="2cbc1f52-a36c-4094-8abd-0848660dc409"/>
+				<box>
+					<topPen lineWidth="1.0"/>
+					<leftPen lineWidth="1.0"/>
+					<bottomPen lineWidth="1.0"/>
+					<rightPen lineWidth="1.0"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[ID MERCHANT]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="320" y="0" width="110" height="20" uuid="d5d26479-f812-4027-8a99-0c6d4dc73588"/>
+				<box>
+					<topPen lineWidth="1.0"/>
+					<leftPen lineWidth="1.0"/>
+					<bottomPen lineWidth="1.0"/>
+					<rightPen lineWidth="1.0"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[NOMINAL]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="430" y="0" width="110" height="20" uuid="1273d697-6663-4d1b-9184-0f080e4f5fda"/>
+				<box>
+					<topPen lineWidth="1.0"/>
+					<leftPen lineWidth="1.0"/>
+					<bottomPen lineWidth="1.0"/>
+					<rightPen lineWidth="1.0"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[NO REKENING]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="540" y="0" width="140" height="20" uuid="6500ab89-5cd3-4cf0-93e3-0efd42fda1af"/>
+				<box>
+					<topPen lineWidth="1.0"/>
+					<leftPen lineWidth="1.0"/>
+					<bottomPen lineWidth="1.0"/>
+					<rightPen lineWidth="1.0"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[PEMEGANG REKENING]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="680" y="0" width="120" height="20" uuid="79be2246-8649-4096-961d-4095fcfef9d2"/>
+				<box>
+					<topPen lineWidth="1.0"/>
+					<leftPen lineWidth="1.0"/>
+					<bottomPen lineWidth="1.0"/>
+					<rightPen lineWidth="1.0"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[NAMA BANK]]></text>
+			</staticText>
+		</band>
+	</columnHeader>
+	<detail>
+		<band height="20" splitType="Stretch">
+			<printWhenExpression><![CDATA["1".equalsIgnoreCase($F{SECTION_PRINT})]]></printWhenExpression>
+			<textField pattern="dd-MM-yyyy">
+				<reportElement x="0" y="0" width="70" height="20" uuid="474c1143-04c9-49bf-b499-98f11ff09363"/>
+				<box leftPadding="5">
+					<leftPen lineWidth="1.0"/>
+					<bottomPen lineWidth="1.0"/>
+				</box>
+				<textElement verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{DEPOSIT_TIME}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="70" y="0" width="140" height="20" uuid="5c54a365-9f8b-467b-b6e6-9fbed9b4d532"/>
+				<box leftPadding="5">
+					<topPen lineWidth="0.0"/>
+					<leftPen lineWidth="1.0"/>
+					<bottomPen lineWidth="1.0"/>
+					<rightPen lineWidth="0.0"/>
+				</box>
+				<textElement verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{NAME}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="210" y="0" width="110" height="20" uuid="0510e973-f268-4027-9fd3-15bd5e44c08b"/>
+				<box leftPadding="5">
+					<leftPen lineWidth="1.0"/>
+					<bottomPen lineWidth="1.0"/>
+				</box>
+				<textElement verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{MERCHANT_ID}]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0.###;(#,##0.###)">
+				<reportElement x="320" y="0" width="110" height="20" uuid="4c3d6110-58b2-46c5-a554-683094d03fd3"/>
+				<box rightPadding="5">
+					<leftPen lineWidth="1.0"/>
+					<bottomPen lineWidth="1.0"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{AMOUNT}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="430" y="0" width="110" height="20" uuid="f4b33dd5-d44f-4b49-a81f-bfb3eee4353a"/>
+				<box leftPadding="5">
+					<leftPen lineWidth="1.0"/>
+					<bottomPen lineWidth="1.0"/>
+				</box>
+				<textElement verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{BANK_ACC_NO}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="540" y="0" width="140" height="20" uuid="e9d000dc-0da2-41f4-b8a0-f1fe098bc1ad"/>
+				<box leftPadding="5">
+					<leftPen lineWidth="1.0"/>
+					<bottomPen lineWidth="1.0"/>
+				</box>
+				<textElement verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{BANK_ACC_HOLDER}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="680" y="0" width="120" height="20" uuid="7e10c439-38ab-40d0-96ae-90628f63dc3f"/>
+				<box leftPadding="5">
+					<leftPen lineWidth="1.0"/>
+					<bottomPen lineWidth="1.0"/>
+					<rightPen lineWidth="1.0"/>
+				</box>
+				<textElement verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{BANK_NAME}]]></textFieldExpression>
+			</textField>
+		</band>
+		<band height="468" splitType="Stretch">
+			<printWhenExpression><![CDATA["2".equalsIgnoreCase($F{SECTION_PRINT})]]></printWhenExpression>
+			<break>
+				<reportElement x="0" y="2" width="801" height="1" uuid="8d3b0283-ea36-4988-b58f-dab3e546aa7c"/>
+			</break>
+			<staticText>
+				<reportElement x="540" y="30" width="260" height="60" uuid="2b2e9bc8-31c6-4bda-ae33-286828daa1f6"/>
+				<textElement textAlignment="Right">
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[PT. TELEKOMUNIKASI SELULAR
+Wisma Mulia
+Jl. Gatot Subroto KAV 42 Jakarta Selatan 12710
+NPWP/PKP: 01.718.327.8.091.00]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="0" y="30" width="270" height="20" uuid="7ca3a5ff-ca60-4f21-b4b7-b1b9ad421edd"/>
+				<textElement textAlignment="Center">
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[PERINTAH BAYAR]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="0" y="50" width="270" height="20" uuid="c6182e21-7c90-4747-8b87-a5fb25356933"/>
+				<textElement textAlignment="Center">
+					<font isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$V{v_no_perintah_bayar}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="0" y="90" width="540" height="110" uuid="3b49914a-553d-46fa-a044-a532d4da004e"/>
+				<textFieldExpression><![CDATA[$V{v_header_perintah_bayar}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="0" y="200" width="60" height="16" uuid="e65b1c2a-9450-49a1-906e-c5238c1fae50"/>
+				<box>
+					<topPen lineWidth="1.0"/>
+					<leftPen lineWidth="1.0"/>
+					<bottomPen lineWidth="1.0"/>
+					<rightPen lineWidth="1.0"/>
+				</box>
+				<textElement textAlignment="Center">
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[No]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="60" y="200" width="540" height="16" uuid="c1fce03a-62cd-420e-b226-526e526ff118"/>
+				<box>
+					<topPen lineWidth="1.0"/>
+					<leftPen lineWidth="1.0"/>
+					<bottomPen lineWidth="1.0"/>
+					<rightPen lineWidth="1.0"/>
+				</box>
+				<textElement textAlignment="Center">
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[Keterangan]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="600" y="200" width="200" height="16" uuid="3dff310d-22bc-4d6c-a6f8-1ca9f657f708"/>
+				<box>
+					<topPen lineWidth="1.0"/>
+					<leftPen lineWidth="1.0"/>
+					<bottomPen lineWidth="1.0"/>
+					<rightPen lineWidth="1.0"/>
+				</box>
+				<textElement textAlignment="Center">
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[Jumlah (Rp.)]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="60" y="216" width="100" height="14" uuid="cc60f494-29c2-41ef-8336-cf3e4330a8d3"/>
+				<box leftPadding="5"/>
+				<text><![CDATA[TCash Cash Out]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="0" y="216" width="60" height="56" uuid="abe67548-468a-4da7-9b85-fbe3dae987f7"/>
+				<box>
+					<topPen lineWidth="1.0"/>
+					<leftPen lineWidth="1.0"/>
+					<bottomPen lineWidth="1.0"/>
+					<rightPen lineWidth="1.0"/>
+				</box>
+				<textElement textAlignment="Center"/>
+				<text><![CDATA[1]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="60" y="230" width="100" height="14" uuid="deebf980-1b67-49ae-91f1-25f054e0536d"/>
+				<box leftPadding="5"/>
+				<text><![CDATA[Doc Number :]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="60" y="244" width="100" height="14" uuid="14567ed0-ff7b-4399-a61c-402b3489443e"/>
+				<box leftPadding="5"/>
+				<text><![CDATA[Note :]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="160" y="230" width="190" height="14" uuid="8ba54691-5ff9-48d3-b7fb-0a85eaf17f2d"/>
+				<box leftPadding="5"/>
+				<textFieldExpression><![CDATA[$F{DOC_NUMBER}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="160" y="244" width="190" height="14" uuid="bb33da05-9356-4142-bcf2-a404d75f2f7f"/>
+				<box leftPadding="5"/>
+				<textFieldExpression><![CDATA[$F{NOTE}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="60" y="258" width="540" height="14" uuid="bfc398c9-9b12-4320-84f5-b904be6bb4b3"/>
+				<box rightPadding="5">
+					<topPen lineWidth="1.0"/>
+					<leftPen lineWidth="1.0"/>
+					<bottomPen lineWidth="1.0"/>
+					<rightPen lineWidth="1.0"/>
+				</box>
+				<textElement textAlignment="Right"/>
+				<text><![CDATA[Total Pembayaran]]></text>
+			</staticText>
+			<textField pattern="#,##0.###;(#,##0.###)">
+				<reportElement x="600" y="216" width="200" height="42" uuid="d0b79ab3-18ba-4394-92df-4881f57877fa"/>
+				<box rightPadding="5">
+					<topPen lineWidth="1.0"/>
+					<leftPen lineWidth="1.0"/>
+					<bottomPen lineWidth="1.0"/>
+					<rightPen lineWidth="1.0"/>
+				</box>
+				<textElement textAlignment="Right"/>
+				<textFieldExpression><![CDATA[$F{AMOUNT}]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0.###;(#,##0.###)">
+				<reportElement x="600" y="258" width="200" height="14" uuid="d87518ad-dbf3-4b34-aa9d-21da7165db2a"/>
+				<box rightPadding="5">
+					<topPen lineWidth="1.0"/>
+					<leftPen lineWidth="1.0"/>
+					<bottomPen lineWidth="1.0"/>
+					<rightPen lineWidth="1.0"/>
+				</box>
+				<textElement textAlignment="Right"/>
+				<textFieldExpression><![CDATA[$F{AMOUNT}]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+</jasperReport>

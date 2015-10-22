@@ -9,125 +9,95 @@
 <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
 <title>Reconciliation Detail</title>
 </head>
-<%
-	Connection con = null;
-	Statement stmt = null;
-	PreparedStatement pstmt = null;
-	ResultSet rs = null;
-	String query = "";
-	String token = "";
-	String content = "";
-	token = request.getParameter("token");
-	// get data from db first
-	if (token != null) {
-		try {
-			System.out.println("token : " + token);
-			query = "select * from merchant_cashout where cashout_id = ?";
-			con = DbCon.getConnection();
-			pstmt = con.prepareStatement(token);
-			rs = pstmt.executeQuery();
-			while (rs.next()) {
-				content += rs.getString("BANKID") + ",";
-				content += rs.getString("TXDT") + ",";
-				content += rs.getString("JOURNALID") + ",";
-				content += rs.getString("DESCRIPTION") + ",";
-				content += rs.getString("TXTYPE") + ",";
-				content += rs.getString("AMOUNT") + ",";
-				content += rs.getString("RECONSTATUS") + ",";
-				content += rs.getString("REFID") + ",";
-				content += rs.getString("DTSTMP") + ",";
-				content += rs.getString("ADJ_COMMENT") + "";
-				content += "\n";
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		} finally {
-			try {
-				pstmt.close();
-				con.close();
-			} catch (Exception ex) {
-				ex.printStackTrace();
-			}
-		}
-		//System.out.println("content : " + content);
-		//write the data to file
-		try {
-			String DATE_FORMAT_NOW = "ddMMyyyy_HHmmss";
-			Calendar cal = Calendar.getInstance();
-			SimpleDateFormat sdf = new SimpleDateFormat(DATE_FORMAT_NOW);
-			String time = sdf.format(cal.getTime());
-			String fileNameExport = "REKON_MATCH_" + time + ".csv";
-			String pathFileExport = application.getRealPath("/") + "CSV/" + fileNameExport;
-			File f2 = new File(pathFileExport);
-			if (!f2.exists()) {
-				f2.createNewFile();
-				//out.println("<a href='../CSV/" + fileNameExport + "' target='_blank'>" + fileNameExport + "</a> <br />");
-				out.println("<a href='../finance/file_download.jsp?pathFile=" + pathFileExport + "&fileName="
-						+ fileNameExport + "'>" + fileNameExport + "</a> <br />");
-			} else {
-				out.println("Error, file is exist <br />");
-			}
-			BufferedWriter output2 = new BufferedWriter(new FileWriter(pathFileExport));
-			output2.write(content);
-			output2.close();
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
-%>
 <body>
-	<table border="0" cellpadding="0" cellspacing="0" width="500px">
-		<tr>
-			<td
-				style="border-left: 1px solid black; border-top: 1px solid black; border-right: 1px solid black;"
-				colspan="4" align="center">Data Comparison Details</td>
-		</tr>
-		<tr>
-			<td
-				style="border-left: 1px solid black; border-bottom: 1px solid black; border-top: 1px solid black;"
-				colspan="2" align="center">TCASH</td>
-			<td style="border: 1px solid black;" colspan="2" align="center">RK
-				BANK</td>
-		</tr>
-		<tr>
-			<td style="border-left: 1px solid black;">Type</td>
-			<td>: CASHOUT</td>
-			<td style="border-left: 1px solid black;">Bank</td>
-			<td style="border-right: 1px solid black;">: BNI</td>
-		</tr>
-		<tr>
-			<td style="border-left: 1px solid black;">Merchant</td>
-			<td>: 1111 - Grapari Malang</td>
-			<td style="border-left: 1px solid black;">Date</td>
-			<td style="border-right: 1px solid black;">: 10/10/2015</td>
-		</tr>
-		<tr>
-			<td style="border-left: 1px solid black;">CashID</td>
-			<td>: 10156</td>
-			<td style="border-left: 1px solid black;">Description</td>
-			<td style="border-right: 1px solid black;">: Tarik tunai</td>
-		</tr>
-		<tr>
-			<td style="border-left: 1px solid black;">Date</td>
-			<td>: 10/10/2015</td>
-			<td style="border-left: 1px solid black;">Amount</td>
-			<td style="border-right: 1px solid black;">: 1000000</td>
-		</tr>
-		<tr>
-			<td style="border-left: 1px solid black;">Note</td>
-			<td>: Daily settlement</td>
-			<td style="border-left: 1px solid black;">&nbsp;</td>
-			<td style="border-right: 1px solid black;">&nbsp;</td>
-		</tr>
-		<tr>
-			<td
-				style="border-left: 1px solid black; border-bottom: 1px solid black;">Amount</td>
-			<td style="border-bottom: 1px solid black;">: 100000</td>
-			<td
-				style="border-left: 1px solid black; border-bottom: 1px solid black;">&nbsp;</td>
-			<td
-				style="border-right: 1px solid black; border-bottom: 1px solid black;">&nbsp;</td>
-		</tr>
-	</table>
+	<%
+		Connection con = null;
+		Statement stmt = null;
+		PreparedStatement pstmt = null;
+		ResultSet rs = null;
+		String query = "";
+		String content = "";
+
+		SimpleDateFormat sdf = new SimpleDateFormat("d-M-yyyy");
+		DecimalFormat formatter2 = new DecimalFormat("#,###.00");
+
+		String token = request.getParameter("token");
+		String from = request.getParameter("from");
+		String to = request.getParameter("to");
+
+		String header = "";
+		// get data from db first
+		if (token != null) {
+			if ("md".equalsIgnoreCase(token)) {
+				header = "TOTAL CASHOUT AMOUNT MATCH DETAIL FROM " + from + " TO " + to;
+				query = "select " + "sum(case when bankid='bni' then amount else 0 end) bni, "
+						+ "sum(case when bankid='bmr' then amount else 0 end) mandiri, " + "sum(amount) allamt "
+						+ "from ag_t_bank_statement " + "where reconstatus=1 " + "and refid is not null "
+						+ "and upper(txtype)='D' and to_date(TXDT) between ? and ?";
+			}
+			if ("bd".equalsIgnoreCase(token)) {
+				header = "TOTAL CASHOUT AMOUNT BANK ONLY DETAIL FROM " + from + " TO " + to;
+				query = "select " + "sum(case when bankid='bni' then amount else 0 end) bni, "
+						+ "sum(case when bankid='bmr' then amount else 0 end) mandiri, " + "sum(amount) allamt "
+						+ "from ag_t_bank_statement " + "where reconstatus=0 " + "and refid is null "
+						+ "and upper(txtype)='D' and to_date(TXDT) between ? and ?";
+			}
+			if ("mc".equalsIgnoreCase(token)) {
+				header = "TOTAL CASHIN AMOUNT MATCH DETAIL FROM " + from + " TO " + to;
+				query = "select " + "sum(case when bankid='bni' then amount else 0 end) bni, "
+						+ "sum(case when bankid='bmr' then amount else 0 end) mandiri, " + "sum(amount) allamt "
+						+ "from ag_t_bank_statement " + "where reconstatus=1 " + "and refid is not null "
+						+ "and upper(txtype)='C' and to_date(TXDT) between ? and ?";
+			}
+			if ("bc".equalsIgnoreCase(token)) {
+				header = "TOTAL CASHIN AMOUNT BANK ONLY DETAIL FROM " + from + " TO " + to;
+				query = "select " + "sum(case when bankid='bni' then amount else 0 end) bni, "
+						+ "sum(case when bankid='bmr' then amount else 0 end) mandiri, " + "sum(amount) allamt "
+						+ "from ag_t_bank_statement " + "where reconstatus=0 " + "and refid is null "
+						+ "and upper(txtype)='C' and to_date(TXDT) between ? and ?";
+			}
+			if ("ma".equalsIgnoreCase(token)) {
+				header = "TOTAL AMOUNT MATCH DETAIL FROM " + from + " TO " + to;
+				query = "select " + "sum(case when bankid='bni' then amount else 0 end) bni, "
+						+ "sum(case when bankid='bmr' then amount else 0 end) mandiri, " + "sum(amount) allamt "
+						+ "from ag_t_bank_statement " + "where reconstatus=1 " + "and refid is not null "
+						+ "and to_date(TXDT) between ? and ?";
+			}
+			if ("ba".equalsIgnoreCase(token)) {
+				header = "TOTAL AMOUNT BANK ONLY DETAIL FROM " + from + " TO " + to;
+				query = "select " + "sum(case when bankid='bni' then amount else 0 end) bni, "
+						+ "sum(case when bankid='bmr' then amount else 0 end) mandiri, " + "sum(amount) allamt "
+						+ "from ag_t_bank_statement " + "where reconstatus=0 " + "and refid is null "
+						+ "and to_date(TXDT) between ? and ?";
+			}
+			out.print("<hr>");
+			out.print(header);
+			out.print("<hr>");
+			try {
+				con = DbCon.getConnection();
+				pstmt = con.prepareStatement(query);
+				pstmt.setDate(1, new java.sql.Date(sdf.parse(from).getTime()));
+				pstmt.setDate(2, new java.sql.Date(sdf.parse(to).getTime()));
+				rs = pstmt.executeQuery();
+				if (rs.next()) {
+					out.print("<table cellpadding='0' cellspacing='0' border='0'>");
+					out.print("<tr><td width='100'>");
+					out.print("BNI</td><td> : </td><td width='200' align='right'>" + formatter2.format(rs.getBigDecimal("bni")));
+					out.print("</td></tr>");
+					out.print("<tr><td width='100'>");
+					out.print("MANDIRI</td><td> : </td><td width='200' align='right'>" + formatter2.format(rs.getBigDecimal("mandiri")));
+					out.print("</td></tr>");
+					out.print("<tr><td width='100'>");
+					out.print("TOTAL</td><td> : </td><td width='200' align='right'>" + formatter2.format(rs.getBigDecimal("allamt")));
+					out.print("</td></tr>");
+					out.print("</table>");
+					out.print("<hr>");
+					out.print("<a href='javascript:window.print();'> Print </a>");
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+	%>
 </body>
 </html>
